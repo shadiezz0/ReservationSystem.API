@@ -9,6 +9,9 @@ namespace ReservationSystem.Infrastructure.Context
 
         public DbSet<ReservationItem> ReservationItems { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<ItemType> ItemTypes { get; set; }
+        public DbSet<Item> Items { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
