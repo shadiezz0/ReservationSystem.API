@@ -7,7 +7,6 @@ namespace ReservationSystem.Infrastructure.Context
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<ReservationItem> ReservationItems { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<ItemType> ItemTypes { get; set; }
@@ -15,10 +14,10 @@ namespace ReservationSystem.Infrastructure.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Reservation>()
-                 .HasOne(r => r.Item)
-                 .WithMany(i => i.Reservations)
-                 .HasForeignKey(r => r.ItemId);
+            base.OnModelCreating(modelBuilder);
+
+            // Automatically apply all IEntityTypeConfiguration<T> in the assembly
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         }
     }
 }
