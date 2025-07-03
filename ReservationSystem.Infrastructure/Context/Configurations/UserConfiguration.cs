@@ -1,0 +1,27 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ReservationSystem.Domain.Entities;
+
+namespace ReservationSystem.Infrastructure.Context.Configurations
+{
+    public class UserConfiguration : IEntityTypeConfiguration<User>
+    {
+        public void Configure(EntityTypeBuilder<User> builder)
+        {
+            builder.HasKey(u => u.Id);
+
+            builder.HasMany(u => u.Reservations)
+                   .WithOne(r => r.User)
+                   .HasForeignKey(r => r.UserId);
+
+            builder.HasData(new User
+            {
+                Id = 1,
+                Name = "Super Admin",
+                Email = "superadmin@system.com",
+                PasswordHash = "superadmin123", // 🛑 Replace with hashed value in production
+                Role = 1 // Assuming 1 is the role for Super Admin
+            });
+        }
+    }
+}

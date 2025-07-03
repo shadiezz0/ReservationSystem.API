@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReservationSystem.Application\ReservationSystem.Application.csproj" />
+    <ProjectReference Include="..\ReservationSystem.Infrastructure\ReservationSystem.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

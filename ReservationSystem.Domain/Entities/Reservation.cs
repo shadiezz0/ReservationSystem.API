@@ -3,11 +3,17 @@
     public class Reservation
     {
         public int Id { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string ReservedBy { get; set; }
+        public DateTime ReservationDate { get; set; } // Only date
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public decimal TotalPrice { get; set; }
+        public string Status { get; set; } // "Pending", "Confirmed", "Cancelled"
+
+        public int UserId { get; set; }
+        public User User { get; set; }
 
         public int ItemId { get; set; }
-        public ReservationItem Item { get; set; }
+        public Item Item { get; set; }
+
     }
 }

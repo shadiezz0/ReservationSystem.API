@@ -30,6 +30,7 @@ namespace ReservationSystem.API.Controllers
         {
             await _service.AddAsync(dto);
             return Ok("Created");
+
         }
 
         [HttpPut("{id}")]

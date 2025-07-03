@@ -1,7 +1,10 @@
+using ReservationSystem.Infrastructure;
+using ReservationSystem.Application;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddApplication();
+builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
