@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ReservationSystem.Domain.Enums
+﻿namespace ReservationSystem.Domain.Enums
 {
-    public class Enum
+      public class Enum
     {
         public enum Result
         {
@@ -28,5 +22,7 @@ namespace ReservationSystem.Domain.Enums
             note = 0,
             popup = 1
         }
+
+
     }
 }
