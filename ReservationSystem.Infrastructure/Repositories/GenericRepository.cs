@@ -1,15 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ReservationSystem.Application.Interfaces;
+using ReservationSystem.Domain.Interfaces;
 using ReservationSystem.Infrastructure.Context;
 
 namespace ReservationSystem.Infrastructure.Repositories
 {
-    public class Repository<T> : IRepository<T> where T : class
+    public class GenericRepository<T> : IRepository<T> where T : class
     {
         private readonly AppDbContext _context;
         private readonly DbSet<T> _dbSet;
 
-        public Repository(AppDbContext context)
+        public GenericRepository(AppDbContext context)
         {
             _context = context;
             _dbSet = _context.Set<T>();
@@ -20,7 +20,6 @@ namespace ReservationSystem.Infrastructure.Repositories
         public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
         public void Update(T entity) => _dbSet.Update(entity);
         public void Delete(T entity) => _dbSet.Remove(entity);
-        public async Task SaveAsync() => await _context.SaveChangesAsync();
 
     }
 }
