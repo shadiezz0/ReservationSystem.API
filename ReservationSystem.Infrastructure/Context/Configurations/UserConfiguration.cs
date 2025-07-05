@@ -20,7 +20,7 @@ namespace ReservationSystem.Infrastructure.Context.Configurations
                 Name = "Super Admin",
                 Email = "superadmin@system.com",
                 PasswordHash = "superadmin123", // 🛑 Replace with hashed value in production
-                Role = 1 // Assuming 1 is the role for Super Admin
+                Role = "User" // Assuming 1 is the role for Super Admin
             });
         }
     }
