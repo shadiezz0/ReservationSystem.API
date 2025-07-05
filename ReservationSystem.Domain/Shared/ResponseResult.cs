@@ -1,8 +1,8 @@
-﻿using static ReservationSystem.Domain.Enums.Enum;
+﻿using static ReservationSystem.Domain.Constants.Enums;
 
 namespace ReservationSystem.Domain.Shared
 {
-      public class ResponseResult
+    public class ResponseResult
     {
         public Result Result { get; set; }
 #nullable enable
@@ -11,8 +11,6 @@ namespace ReservationSystem.Domain.Shared
         public Alart? Alart { get; set; }
         public string? Note { get; set; } // notes for front
         public int TotalCount { get; set; } // Count in Table
-        public string ErrorMessageAr { get; set; }
-        public string ErrorMessageEn { get; set; }
         public double Total { get; set; }
     }
     public class Alart

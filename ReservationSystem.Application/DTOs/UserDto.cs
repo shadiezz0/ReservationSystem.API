@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ReservationSystem.Application.DTOs
+﻿namespace ReservationSystem.Application.DTOs
 {
-    public class UserDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
-        public int Role { get; set; } // "Admin" or "User"
-    }
+      public class RegisterDto
+      {
+            public string FullName { get; set; }
+            public string Email { get; set; }
+            public string Password { get; set; }
+      }
+      public class LoginDto
+      {
+            public string Email { get; set; }
+            public string Password { get; set; }
+      }
+      public class ForgotPasswordDto
+      {
+            public string Email { get; set; }
+      }
+
 }

@@ -9,7 +9,6 @@ namespace ReservationSystem.Application.Validators
             {
                   RuleFor(x => x.Name).NotEmpty();
                   RuleFor(x => x.PricePerHour).GreaterThan(0);
-                  RuleFor(x => x.ItemTypeId).GreaterThan(0);
             }
       }
 }
