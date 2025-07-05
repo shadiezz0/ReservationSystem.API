@@ -1,4 +1,6 @@
-﻿namespace ReservationSystem.Application.DTOs
+﻿using ReservationSystem.Domain.Entities;
+
+namespace ReservationSystem.Application.DTOs
 {
       public class ReservationDto
       {
@@ -10,6 +12,8 @@
             public TimeSpan EndTime { get; set; }
             public decimal TotalPrice { get; set; }
             public string Status { get; set; }
+       
 
-      }
+
+    }
 }
