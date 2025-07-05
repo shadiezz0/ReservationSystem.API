@@ -11,6 +11,9 @@ namespace ReservationSystem.Infrastructure.Context
         public DbSet<User> Users { get; set; }
         public DbSet<ItemType> ItemTypes { get; set; }
         public DbSet<Item> Items { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

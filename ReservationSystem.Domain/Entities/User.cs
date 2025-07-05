@@ -6,7 +6,10 @@
         public string Name { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public string Role { get; set; } // "Admin" or "User"
+
+        // Role Relationship (one-to-many)
+        public int RoleId { get; set; }
+        public Role Role { get; set; }
         public ICollection<Reservation> Reservations { get; set; }
     }
 }

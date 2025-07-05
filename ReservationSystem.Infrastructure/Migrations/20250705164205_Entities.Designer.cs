@@ -12,8 +12,8 @@ using ReservationSystem.Infrastructure.Context;
 namespace ReservationSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250705114314_intialmigration")]
-    partial class intialmigration
+    [Migration("20250705164205_Entities")]
+    partial class Entities
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,6 +74,45 @@ namespace ReservationSystem.Infrastructure.Migrations
                     b.ToTable("ItemTypes");
                 });
 
+            modelBuilder.Entity("ReservationSystem.Domain.Entities.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "CanManageUsers"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "CanManageRoles"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "CanManageSettings"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "CanViewDashboard"
+                        });
+                });
+
             modelBuilder.Entity("ReservationSystem.Domain.Entities.Reservation", b =>
                 {
                     b.Property<int>("Id")
@@ -113,6 +152,67 @@ namespace ReservationSystem.Infrastructure.Migrations
                     b.ToTable("Reservations");
                 });
 
+            modelBuilder.Entity("ReservationSystem.Domain.Entities.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "SuperAdmin"
+                        });
+                });
+
+            modelBuilder.Entity("ReservationSystem.Domain.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 1
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 2
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 3
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 4
+                        });
+                });
+
             modelBuilder.Entity("ReservationSystem.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -133,10 +233,12 @@ namespace ReservationSystem.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Role")
+                    b.Property<int>("RoleId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
 
@@ -144,10 +246,10 @@ namespace ReservationSystem.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            Email = "superadmin@system.com",
-                            Name = "Super Admin",
-                            PasswordHash = "superadmin123",
-                            Role = 1
+                            Email = "Sh@example.com",
+                            Name = "Sh",
+                            PasswordHash = "Sh",
+                            RoleId = 1
                         });
                 });
 
@@ -181,6 +283,36 @@ namespace ReservationSystem.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ReservationSystem.Domain.Entities.RolePermission", b =>
+                {
+                    b.HasOne("ReservationSystem.Domain.Entities.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ReservationSystem.Domain.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("ReservationSystem.Domain.Entities.User", b =>
+                {
+                    b.HasOne("ReservationSystem.Domain.Entities.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("ReservationSystem.Domain.Entities.Item", b =>
                 {
                     b.Navigation("Reservations");
@@ -189,6 +321,18 @@ namespace ReservationSystem.Infrastructure.Migrations
             modelBuilder.Entity("ReservationSystem.Domain.Entities.ItemType", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ReservationSystem.Domain.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("ReservationSystem.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("ReservationSystem.Domain.Entities.User", b =>

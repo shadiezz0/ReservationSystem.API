@@ -42,7 +42,7 @@ namespace ReservationSystem.Application.Service.Auth
                         Name = dto.FullName,
                         Email = dto.Email,
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                        Role = "User"
+                        RoleId = 1
                   };
 
                   await _userRepo.AddAsync(user);

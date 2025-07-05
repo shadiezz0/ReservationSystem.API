@@ -14,13 +14,14 @@ namespace ReservationSystem.Infrastructure.Context.Configurations
                    .WithOne(r => r.User)
                    .HasForeignKey(r => r.UserId);
 
+
             builder.HasData(new User
             {
                 Id = 1,
-                Name = "Super Admin",
-                Email = "superadmin@system.com",
-                PasswordHash = "superadmin123", // 🛑 Replace with hashed value in production
-                Role = "User" // Assuming 1 is the role for Super Admin
+                Name = "Sh",
+                Email = "Sh@example.com", // ✅ REQUIRED field
+                PasswordHash = "Sh",
+                RoleId = 1
             });
         }
     }
