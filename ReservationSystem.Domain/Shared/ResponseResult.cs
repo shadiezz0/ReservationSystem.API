@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static ReservationSystem.Domain.Enums.Enum;
+﻿using static ReservationSystem.Domain.Enums.Enum;
 
 namespace ReservationSystem.Domain.Shared
 {
-    public class ResponseResult
+      public class ResponseResult
     {
         public Result Result { get; set; }
 #nullable enable
