@@ -4,7 +4,7 @@ namespace ReservationSystem.Application.Service.Auth
 {
       public class UserRepository : IUserRepository
       {
-            private readonly IRepository<User> _repo;
+            private readonly IGenericRepository<User> _repo;
 
             public UserRepository(IUnitOfWork unitOfWork)
             {

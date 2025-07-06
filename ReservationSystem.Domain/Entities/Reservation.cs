@@ -8,7 +8,7 @@
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
 
-        public decimal TotalPrice { get; set; }
+        public double TotalPrice { get; set; }
         public string Status { get; set; } // "Pending", "Confirmed", "Cancelled"
 
         public int UserId { get; set; }

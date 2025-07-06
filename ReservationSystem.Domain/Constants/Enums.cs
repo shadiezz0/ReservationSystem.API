@@ -14,7 +14,7 @@
         public enum AlartType
         {
             information = 0,
-            warrning = 1,
+            warning = 1,
             error = 2,
             success = 3
         }

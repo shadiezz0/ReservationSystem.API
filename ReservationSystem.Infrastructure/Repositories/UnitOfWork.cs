@@ -13,7 +13,7 @@ namespace ReservationSystem.Infrastructure.Repositories
                   _context = context;
             }
 
-            public IRepository<T> Repository<T>() where T : class
+            public IGenericRepository<T> Repository<T>() where T : class
             {
                   var type = typeof(T);
 
@@ -24,7 +24,7 @@ namespace ReservationSystem.Infrastructure.Repositories
                         return repoInstance;
                   }
 
-                  return (IRepository<T>)repository!;
+                  return (IGenericRepository<T>)repository!;
             }
 
             public async Task<int> SaveAsync() => await _context.SaveChangesAsync();

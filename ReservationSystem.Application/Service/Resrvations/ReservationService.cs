@@ -5,8 +5,8 @@ namespace ReservationSystem.Application.Service.Resrvations
 {
     public class ReservationService : IReservationService
     {
-        private readonly IRepository<Reservation> _reservation;
-        private readonly IRepository<Item> _itemRepo;
+        private readonly IGenericRepository<Reservation> _reservation;
+        private readonly IGenericRepository<Item> _itemRepo;
         private readonly IUnitOfWork _uow;
         public ReservationService(IUnitOfWork uow)
         {
@@ -18,7 +18,7 @@ namespace ReservationSystem.Application.Service.Resrvations
         public async Task<ResponseResult> CreateAsync(CreateReservationDto dto)
         {
             var item = await _itemRepo.GetByIdAsync(dto.ItemId);
-            if (item == null || !item.IsAvailable)
+            if (item == null)
                 return new ResponseResult
                 {
                     Result = Result.Failed,
@@ -26,31 +26,24 @@ namespace ReservationSystem.Application.Service.Resrvations
                     {
                         AlartType = AlartType.error,
                         type = AlartShow.note,
-                        MessageAr = "العنصر غير متاح.",
-                        MessageEn = "Item is not available.",
+                        MessageAr = "العنصر غير موجود.",
+                        MessageEn = "Item not found.",
                     }
                 };
-
-            var duration = (dto.EndTime - dto.StartTime).TotalHours;
-            var totalPrice = item.PricePerHour * (decimal)duration;
-
             var reservation = new Reservation
             {
                 ReservationDate = dto.ReservationDate,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
-                Status = "Pending",
                 ItemId = dto.ItemId,
                 UserId = dto.UserId,
-                TotalPrice = totalPrice
+                Status = "Pending",
+                TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours // Assuming TotalPrice is calculated based on hours
             };
-
             await _reservation.AddAsync(reservation);
             await _uow.SaveAsync();
-
             return new ResponseResult
             {
-                Data =  reservation.Id ,
                 Result = Result.Success,
                 Alart = new Alart
                 {
@@ -60,7 +53,6 @@ namespace ReservationSystem.Application.Service.Resrvations
                     MessageEn = "Reservation created successfully.",
                 }
             };
-
         }
 
         public async Task<ResponseResult> DeleteAsync(int id)
@@ -78,10 +70,8 @@ namespace ReservationSystem.Application.Service.Resrvations
                         MessageEn = "Reservation not found.",
                     }
                 };
-
             _reservation.Delete(res);
             await _uow.SaveAsync();
-
             return new ResponseResult
             {
                 Result = Result.Success,
@@ -109,7 +99,6 @@ namespace ReservationSystem.Application.Service.Resrvations
                 Status = r.Status,
                 TotalPrice = r.TotalPrice
             }).ToList();
-
             return new ResponseResult
             {
                 Data = result,
@@ -126,8 +115,8 @@ namespace ReservationSystem.Application.Service.Resrvations
 
         public async Task<ResponseResult> GetByIdAsync(int id)
         {
-            var r = await _reservation.GetByIdAsync(id);
-            if (r == null)
+            var res = await _reservation.GetByIdAsync(id);
+            if (res == null)
                 return new ResponseResult
                 {
                     Result = Result.Failed,
@@ -139,32 +128,29 @@ namespace ReservationSystem.Application.Service.Resrvations
                         MessageEn = "Reservation not found.",
                     }
                 };
-
-            var dto = new ReservationDto
+            var result = new ReservationDto
             {
-                Id = r.Id,
-                ReservationDate = r.ReservationDate,
-                StartTime = r.StartTime,
-                EndTime = r.EndTime,
-                ItemName = r.Item.Name,
-                UserName = r.User.Name,
-                Status = r.Status,
-                TotalPrice = r.TotalPrice
+                Id = res.Id,
+                ReservationDate = res.ReservationDate,
+                StartTime = res.StartTime,
+                EndTime = res.EndTime,
+                ItemName = res.Item.Name,
+                UserName = res.User.Name,
+                Status = res.Status,
+                TotalPrice = res.TotalPrice
             };
-
             return new ResponseResult
             {
-                Data = dto,
+                Data = result,
                 Result = Result.Success,
                 Alart = new Alart
                 {
                     AlartType = AlartType.success,
                     type = AlartShow.note,
-                    MessageAr = "تم جلب الحجز بنجاح.",
-                    MessageEn = "Reservation retrieved successfully.",
+                    MessageAr = "تم جلب تفاصيل الحجز بنجاح.",
+                    MessageEn = "Reservation details retrieved successfully.",
                 }
             };
-
         }
 
         public async Task<ResponseResult> UpdateAsync(UpdateReservationDto dto)
@@ -182,7 +168,6 @@ namespace ReservationSystem.Application.Service.Resrvations
                         MessageEn = "Reservation not found.",
                     }
                 };
-
             res.ReservationDate = dto.ReservationDate;
             res.StartTime = dto.StartTime;
             res.EndTime = dto.EndTime;
@@ -204,6 +189,138 @@ namespace ReservationSystem.Application.Service.Resrvations
             };
         }
 
+        public async Task<ResponseResult> GetByUserIdAsync(int userId)
+        {
+            var reservations = await _reservation.FindAllAsync(r => r.UserId == userId);
+            if (reservations == null || !reservations.Any())
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "لا توجد حجوزات لهذا المستخدم.",
+                        MessageEn = "No reservations found for this user.",
+                    }
+                };
+            var result = reservations.Select(r => new ReservationDto
+            {
+                Id = r.Id,
+                ReservationDate = r.ReservationDate,
+                StartTime = r.StartTime,
+                EndTime = r.EndTime,
+                ItemName = r.Item.Name,
+                UserName = r.User.Name,
+                Status = r.Status,
+                TotalPrice = r.TotalPrice
+            }).ToList();
+            return new ResponseResult
+            {
+                Data = result,
+                Result = Result.Success,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.success,
+                    type = AlartShow.note,
+                    MessageAr = "تم جلب حجوزات المستخدم بنجاح.",
+                    MessageEn = "User reservations retrieved successfully.",
+                }
+            };
+        }
+
+        public async Task<ResponseResult> ConfirmReservationAsync(int id)
+        {
+            var res = await _reservation.GetByIdAsync(id);
+            if (res == null)
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "الحجز غير موجود.",
+                        MessageEn = "Reservation not found.",
+                    }
+                };
+
+            if (res.Status != "Pending")
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "لا يمكن تأكيد الحجز إلا إذا كان في حالة انتظار.",
+                        MessageEn = "Reservation can only be confirmed if it is in pending status.",
+                    }
+                };
+
+            res.Status = "Confirmed";
+            _reservation.Update(res);
+            await _uow.SaveAsync();
+
+            return new ResponseResult
+            {
+                Result = Result.Success,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.success,
+                    type = AlartShow.note,
+                    MessageAr = "تم تأكيد الحجز بنجاح.",
+                    MessageEn = "Reservation confirmed successfully.",
+                }
+            };
+
+        }
+
+        public async Task<ResponseResult> CancelReservationAsync(int id)
+        {
+            var res = await _reservation.GetByIdAsync(id);
+            if (res == null)
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "الحجز غير موجود.",
+                        MessageEn = "Reservation not found.",
+                    }
+                };
+
+            if (res.Status == "Cancelled")
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.note,
+                        MessageAr = "هذا الحجز تم إلغاؤه بالفعل.",
+                        MessageEn = "This reservation has already been cancelled.",
+                    }
+                };
+
+            res.Status = "Cancelled";
+            _reservation.Update(res);
+            await _uow.SaveAsync();
+
+            return new ResponseResult
+            {
+                Result = Result.Success,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.success,
+                    type = AlartShow.note,
+                    MessageAr = "تم إلغاء الحجز بنجاح.",
+                    MessageEn = "Reservation cancelled successfully.",
+                }
+            };
+        }
 
     }
 }
