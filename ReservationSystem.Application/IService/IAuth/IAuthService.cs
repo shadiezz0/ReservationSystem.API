@@ -1,6 +1,4 @@
-﻿using ReservationSystem.Application.DTOs;
-using ReservationSystem.Domain.Shared;
-
+﻿
 namespace ReservationSystem.Application.IService.IAuth
 {
     public interface IAuthService

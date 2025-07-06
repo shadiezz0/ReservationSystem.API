@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ReservationSystem.Domain.Entities;
-
-namespace ReservationSystem.Infrastructure.Context
+﻿namespace ReservationSystem.Infrastructure.Context
 {
     public class AppDbContext : DbContext
     {

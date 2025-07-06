@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using ReservationSystem.Application.DTOs;
 
 namespace ReservationSystem.Application.Validators
 {

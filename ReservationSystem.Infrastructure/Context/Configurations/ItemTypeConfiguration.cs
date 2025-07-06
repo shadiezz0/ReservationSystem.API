@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ReservationSystem.Domain.Entities;
-
+﻿
 namespace ReservationSystem.Infrastructure.Context.Configurations
 {
     public class ItemTypeConfiguration : IEntityTypeConfiguration<ItemType>

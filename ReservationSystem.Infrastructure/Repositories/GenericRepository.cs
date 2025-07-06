@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ReservationSystem.Domain.Interfaces;
+﻿using ReservationSystem.Domain.Interfaces;
 using ReservationSystem.Infrastructure.Context;
 
 namespace ReservationSystem.Infrastructure.Repositories

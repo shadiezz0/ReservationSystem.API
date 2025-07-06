@@ -1,5 +1,4 @@
-﻿using ReservationSystem.Domain.Entities;
-
+﻿
 namespace ReservationSystem.Application.IService.IAuth
 {
       public interface IUserRepository

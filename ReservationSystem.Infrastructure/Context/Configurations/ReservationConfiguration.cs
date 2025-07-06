@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore;
-using ReservationSystem.Domain.Entities;
-
+﻿
 namespace ReservationSystem.Infrastructure.Context.Configurations
 {
     public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>

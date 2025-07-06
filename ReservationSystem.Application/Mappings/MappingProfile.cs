@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using ReservationSystem.Application.DTOs;
-using ReservationSystem.Domain.Entities;
 
 namespace ReservationSystem.Application.Mappings
 {

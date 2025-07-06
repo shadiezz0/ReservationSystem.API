@@ -1,6 +1,4 @@
 ﻿using ReservationSystem.Application.IService.IAuth;
-using ReservationSystem.Domain.Entities;
-using ReservationSystem.Domain.Interfaces;
 
 namespace ReservationSystem.Application.Service.Auth
 {

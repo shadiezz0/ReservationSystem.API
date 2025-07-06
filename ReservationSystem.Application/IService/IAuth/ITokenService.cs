@@ -1,4 +1,4 @@
-﻿using ReservationSystem.Domain.Entities;
+﻿
 
 public interface ITokenService
 {

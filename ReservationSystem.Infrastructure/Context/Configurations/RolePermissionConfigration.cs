@@ -1,14 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ReservationSystem.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ReservationSystem.Infrastructure.Context.Configurations
+﻿namespace ReservationSystem.Infrastructure.Context.Configurations
 {
     public class RolePermissionConfigration : IEntityTypeConfiguration<RolePermission>
     {
