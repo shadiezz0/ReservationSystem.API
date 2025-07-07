@@ -27,7 +27,11 @@ namespace ReservationSystem.Infrastructure.Repositories
                   return (IGenericRepository<T>)repository!;
             }
 
-            public async Task<int> SaveAsync() => await _context.SaveChangesAsync();
+        public async Task<bool> SaveAsync()
+        {
+            bool result = await _context.SaveChangesAsync() != 0;
+            return result;
+        } 
 
             public void Dispose() =>  _context.Dispose();
             

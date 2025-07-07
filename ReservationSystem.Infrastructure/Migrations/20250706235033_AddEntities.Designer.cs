@@ -12,8 +12,8 @@ using ReservationSystem.Infrastructure.Context;
 namespace ReservationSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250705164205_Entities")]
-    partial class Entities
+    [Migration("20250706235033_AddEntities")]
+    partial class AddEntities
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -10,5 +10,6 @@ namespace ReservationSystem.Domain.Interfaces
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
+        Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate);
     }
 }

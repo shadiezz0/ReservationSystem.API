@@ -41,16 +41,30 @@ namespace ReservationSystem.Application.Service.Resrvations
                 TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours // Assuming TotalPrice is calculated based on hours
             };
             await _reservation.AddAsync(reservation);
-            await _uow.SaveAsync();
+            var save = await _uow.SaveAsync();
+            if (save)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Success,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.success,
+                        type = AlartShow.note,
+                        MessageAr = "تم إنشاء الحجز بنجاح.",
+                        MessageEn = "Reservation created successfully.",
+                    }
+                };
+            }
             return new ResponseResult
             {
-                Result = Result.Success,
+                Result = Result.Failed,
                 Alart = new Alart
                 {
-                    AlartType = AlartType.success,
+                    AlartType = AlartType.error,
                     type = AlartShow.note,
-                    MessageAr = "تم إنشاء الحجز بنجاح.",
-                    MessageEn = "Reservation created successfully.",
+                    MessageAr = "لم يتم إنشاء الحجز بنجاح.",
+                    MessageEn = "Reservation Not created successfully.",
                 }
             };
         }
@@ -174,17 +188,30 @@ namespace ReservationSystem.Application.Service.Resrvations
             res.Status = dto.Status;
 
             _reservation.Update(res);
-            await _uow.SaveAsync();
-
+           var save = await _uow.SaveAsync();
+            if (save)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Success,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.success,
+                        type = AlartShow.note,
+                        MessageAr = "تم تحديث الحجز بنجاح.",
+                        MessageEn = "Reservation updated successfully.",
+                    }
+                };
+            }
             return new ResponseResult
             {
-                Result = Result.Success,
+                Result = Result.Failed,
                 Alart = new Alart
                 {
-                    AlartType = AlartType.success,
+                    AlartType = AlartType.error,
                     type = AlartShow.note,
-                    MessageAr = "تم تحديث الحجز بنجاح.",
-                    MessageEn = "Reservation updated successfully.",
+                    MessageAr = "لم يتم تحديث الحجز بنجاح.",
+                    MessageEn = "Reservation not updated successfully.",
                 }
             };
         }
@@ -300,7 +327,7 @@ namespace ReservationSystem.Application.Service.Resrvations
                     {
                         AlartType = AlartType.warning,
                         type = AlartShow.note,
-                        MessageAr = "هذا الحجز تم إلغاؤه بالفعل.",
+                        MessageAr = "هذا الحجز تم إلغاءه بالفعل.",
                         MessageEn = "This reservation has already been cancelled.",
                     }
                 };
