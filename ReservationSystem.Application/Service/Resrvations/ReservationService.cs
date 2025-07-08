@@ -1,5 +1,4 @@
 ﻿using ReservationSystem.Application.IService.IResrvations;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ReservationSystem.Application.Service.Resrvations
 {
@@ -188,7 +187,7 @@ namespace ReservationSystem.Application.Service.Resrvations
             res.Status = dto.Status;
 
             _reservation.Update(res);
-           var save = await _uow.SaveAsync();
+            var save = await _uow.SaveAsync();
             if (save)
             {
                 return new ResponseResult
@@ -349,5 +348,46 @@ namespace ReservationSystem.Application.Service.Resrvations
             };
         }
 
+        public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
+        {
+            var reservations = await _reservation.FindAllAsync(r => r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate);
+            if (reservations == null || !reservations.Any())
+                return new ResponseResult
+                {
+                    Result = Result.NoDataFound,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.note,
+                        MessageAr = "لا توجد حجوزات في هذا النطاق الزمني.",
+                        MessageEn = "No reservations found in this date range.",
+                    }
+                };
+            var result = reservations.Select(r => new ReservationDto
+            {
+                Id = r.Id,
+                ReservationDate = r.ReservationDate,
+                StartTime = r.StartTime,
+                EndTime = r.EndTime,
+                ItemName = r.Item.Name,
+                UserName = r.User.Name,
+                Status = r.Status,
+                TotalPrice = r.TotalPrice
+            }).ToList();
+            return new ResponseResult
+            {
+                Data = result,
+                Result = Result.Success,
+                TotalCount = result.Count(),
+                Alart = new Alart
+                {
+                    AlartType = AlartType.success,
+                    type = AlartShow.note,
+                    MessageAr = "تم جلب الحجوزات بنجاح.",
+                    MessageEn = "Reservations retrieved successfully.",
+                }
+            };
+
+        }
     }
 }
