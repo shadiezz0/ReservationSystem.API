@@ -1,6 +1,10 @@
 ﻿
 
+using System.Security.Claims;
+
 public interface ITokenService
 {
-      Task<string> GenerateToken(User user);
+      string GenerateAccessToken(User user, string role);
+      string GenerateRefreshToken();
+      ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
 }
