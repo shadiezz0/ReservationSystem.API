@@ -19,6 +19,12 @@
         public string Status { get; set; } //Pending / Confirmed / Cancelled
     }
 
+    public class FilterReservationDto
+    {
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
+    }
+
     public class ReservationDto
     {
         public int Id { get; set; }

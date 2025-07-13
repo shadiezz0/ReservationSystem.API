@@ -10,5 +10,7 @@
         Task<ResponseResult> GetByUserIdAsync(int userId);
         Task<ResponseResult> ConfirmReservationAsync(int id);
         Task<ResponseResult> CancelReservationAsync(int id);
+        Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto);
+
     }
 }
