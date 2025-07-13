@@ -6,10 +6,8 @@ namespace ReservationSystem.Infrastructure.Context.Configurations
         public void Configure(EntityTypeBuilder<Permission> builder)
         {
             builder.HasData(
-              new Permission { Id = 1, Name = "CanManageUsers" },
-              new Permission { Id = 2, Name = "CanManageRoles" },
-              new Permission { Id = 3, Name = "CanManageSettings" },
-              new Permission { Id = 4, Name = "CanViewDashboard" }
+              new Permission { Id = 1, isAdd =true,isShow=true , isEdit = true , isDelete=true }
+     
           );
         }
     }
