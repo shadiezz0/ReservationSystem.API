@@ -1,4 +1,4 @@
-﻿using ReservationSystem.Application.IService.IItemType;
+﻿using ReservationSystem.Application.IService;
 
 public class ItemTypeService : IItemTypeService
 {
@@ -97,4 +97,77 @@ public class ItemTypeService : IItemTypeService
             }
         };
     }
+
+    public async Task<ResponseResult> GetByIdAsync(int id)
+    {
+        var itemType = await _ItemTyperepo.GetByIdAsync(id);
+        if (itemType == null)
+        {
+            return new ResponseResult
+            {
+                Result = Result.Failed,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.error,
+                    type = AlartShow.note,
+                    MessageAr = "نوع العنصر غير موجود.",
+                    MessageEn = "Item type not found."
+                }
+            };
+        }
+
+        return new ResponseResult
+        {
+            Data = itemType,
+            Result = Result.Success,
+            Alart = new Alart
+            {
+                AlartType = AlartType.success,
+                type = AlartShow.note,
+                MessageAr = "تم استرجاع نوع العنصر بنجاح.",
+                MessageEn = "Item type retrieved successfully."
+            }
+        };
+
+    }
+
+    public async Task<ResponseResult> UpdateAsync(UpdateItemTypeDto dto)
+    {
+        var itemType = await _ItemTyperepo.GetByIdAsync(dto.Id);
+        if (itemType == null)
+        {
+            return new ResponseResult
+            {
+                Result = Result.Failed,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.error,
+                    type = AlartShow.note,
+                    MessageAr = "نوع العنصر غير موجود.",
+                    MessageEn = "Item type not found."
+                }
+            };
+        }
+
+        itemType.Name = dto.Name;
+
+        _ItemTyperepo.Update(itemType);
+
+        var saveResult = await _uow.SaveAsync();
+
+        return new ResponseResult
+        {
+            Result = saveResult ? Result.Success : Result.Failed,
+            Alart = new Alart
+            {
+                AlartType = saveResult ? AlartType.success : AlartType.error,
+                type = AlartShow.note,
+                MessageAr = saveResult ? "تم تحديث نوع العنصر بنجاح." : "فشل في تحديث نوع العنصر.",
+                MessageEn = saveResult ? "Item type updated successfully." : "Failed to update item type.",
+            }
+        };
+    }
+
+
+
 }

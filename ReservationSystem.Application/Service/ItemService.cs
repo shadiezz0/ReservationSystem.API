@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using ReservationSystem.Application.IService.IItems;
+using ReservationSystem.Application.IService;
 
-namespace ReservationSystem.Application.Service.Items
+namespace ReservationSystem.Application.Service
 {
     public class ItemService : IItemService
     {
@@ -23,12 +23,13 @@ namespace ReservationSystem.Application.Service.Items
                 IsAvailable = dto.IsAvailable,
                 ItemTypeId = dto.ItemTypeId
             };
+
             await _Itemrepo.AddAsync(item);
             var saveResult = await _uow.SaveAsync();
 
             return new ResponseResult
             {
-                Data = item.Id ,
+                Data = item.Id,
                 Result = saveResult ? Result.Success : Result.Failed,
                 Alart = new Alart
                 {
@@ -42,7 +43,7 @@ namespace ReservationSystem.Application.Service.Items
 
         public async Task<ResponseResult> DeleteAsync(int id)
         {
-            var item =await _Itemrepo.GetByIdAsync(id);
+            var item = await _Itemrepo.GetByIdAsync(id);
             if (item == null)
             {
                 return new ResponseResult
@@ -57,8 +58,10 @@ namespace ReservationSystem.Application.Service.Items
                     }
                 };
             }
+
             _Itemrepo.Delete(item);
             var saveResult = await _uow.SaveAsync();
+
             return new ResponseResult
             {
                 Result = saveResult ? Result.Success : Result.Failed,
@@ -218,6 +221,7 @@ namespace ReservationSystem.Application.Service.Items
                     }
                 };
             }
+
             item.Name = dto.Name;
             item.Description = dto.Description;
             item.PricePerHour = dto.PricePerHour;
@@ -239,5 +243,8 @@ namespace ReservationSystem.Application.Service.Items
                 }
             };
         }
+
+
+
     }
 }

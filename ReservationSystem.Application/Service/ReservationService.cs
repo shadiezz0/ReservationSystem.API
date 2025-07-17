@@ -1,6 +1,6 @@
-﻿using ReservationSystem.Application.IService.IResrvations;
+﻿using ReservationSystem.Application.IService;
 
-namespace ReservationSystem.Application.Service.Resrvations
+namespace ReservationSystem.Application.Service
 {
     public class ReservationService : IReservationService
     {

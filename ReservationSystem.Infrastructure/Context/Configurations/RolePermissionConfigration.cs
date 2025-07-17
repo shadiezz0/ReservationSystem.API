@@ -16,13 +16,6 @@
                 .WithMany(p => p.RolePermissions)
                 .HasForeignKey(rp => rp.PermissionId);
 
-            modelBuilder.HasData(
-                new RolePermission { RoleId = 1, PermissionId = 1 },
-                new RolePermission { RoleId = 1, PermissionId = 2 },
-                new RolePermission { RoleId = 1, PermissionId = 3 },
-                new RolePermission { RoleId = 1, PermissionId = 4 }
-            );
-
         }
     }
 }

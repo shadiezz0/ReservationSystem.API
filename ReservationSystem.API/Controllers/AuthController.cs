@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ReservationSystem.Application.DTOs;
-using ReservationSystem.Application.IService.IAuth;
+using ReservationSystem.Application.IService;
 
 namespace ReservationSystem.API.Controllers
 {
-   
+
     [ApiController]
     [Route("api/[controller]")]
     [AllowAnonymous]
@@ -21,10 +21,9 @@ namespace ReservationSystem.API.Controllers
         [HttpPost("login")]
             public async Task<IActionResult> Login(LoginDto dto) =>
                 Ok(await _authService.LoginAsync(dto));
-      
-        [HttpPost("forgot-password")]
-            public async Task<IActionResult> Forgot(ForgotPasswordDto dto) =>
-                Ok(await _authService.ForgotPasswordAsync(dto));
-      }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(TokenDto dto) => Ok(await _authService.RefreshTokenAsync(dto));
+    }
 
 }

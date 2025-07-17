@@ -15,11 +15,6 @@
             public string Password { get; set; }
       }
 
-      public class ForgotPasswordDto
-      {
-            public string Email { get; set; }
-      }
-
       public class TokenDto
       {
             public string AccessToken { get; set; }

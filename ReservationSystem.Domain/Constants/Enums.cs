@@ -18,12 +18,21 @@
             error = 2,
             success = 3
         }
+
         public enum AlartShow
         {
             note = 0,
             popup = 1
         }
 
-     
+        public enum PermissionAction
+        {
+            Show,
+            Add,
+            Edit,
+            Delete
+        }
+
+
     }
 }

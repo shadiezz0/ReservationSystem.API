@@ -1,4 +1,4 @@
-﻿namespace ReservationSystem.Application.IService.IResrvations
+﻿namespace ReservationSystem.Application.IService
 {
     public interface IReservationService
     {
