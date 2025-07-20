@@ -4,7 +4,6 @@ namespace ReservationSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class ReservationController : ControllerBase
     {
         private readonly IReservationService _reservationService;

@@ -1,4 +1,5 @@
-﻿using ReservationSystem.Application.IService;
+﻿using Microsoft.Extensions.Options;
+using ReservationSystem.Application.IService;
 using System.Security.Claims;
 
 
@@ -9,14 +10,18 @@ namespace ReservationSystem.Application.Service
         private readonly IUnitOfWork _uow;
         private readonly IGenericRepository<User> _userRepo;
         private readonly IGenericRepository<Role> _roleRepo;
+        private readonly IGenericRepository<RefreshToken> _refreshTokenRepo;
         private readonly ITokenService _tokenService;
+        private readonly JwtSettings _jwtSettings;
 
-        public AuthService(IUnitOfWork uow, ITokenService tokenService)
+        public AuthService(IUnitOfWork uow, ITokenService tokenService, IOptions<JwtSettings> jwtOptions)
         {
             _uow = uow;
             _userRepo = uow.Repository<User>();
             _roleRepo = uow.Repository<Role>();
+            _refreshTokenRepo = uow.Repository<RefreshToken>();
             _tokenService = tokenService;
+            _jwtSettings = jwtOptions.Value;
         }
 
         public async Task<ResponseResult> RegisterAsync(RegisterDto dto)
@@ -75,12 +80,23 @@ namespace ReservationSystem.Application.Service
                         MessageAr = "البريد الإلكتروني أو كلمة المرور غير صحيحة"
                     }
                 };
+
             var role = await _roleRepo.GetByIdAsync(user.RoleId);
             var access = _tokenService.GenerateAccessToken(user, role.Name);
             var refresh = _tokenService.GenerateRefreshToken();
 
+            var refreshEntity = new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refresh,
+                Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays),
+                IsRevoked = false,
+                IsUsed = false
+            };
 
-            //var token = _tokenService.GenerateToken(user);
+            await _refreshTokenRepo.AddAsync(refreshEntity);
+            await _uow.SaveAsync();
+
             return new ResponseResult
             {
                 Result = Result.Success,
@@ -112,22 +128,13 @@ namespace ReservationSystem.Application.Service
                 };
 
             var userEmail = principal.FindFirst(ClaimTypes.Email)?.Value;
-            if (userEmail == null)
-                return new ResponseResult
-                {
-                    Result = Result.Failed,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.error,
-                        type = AlartShow.popup,
-                        MessageEn = "User email not found in token",
-                        MessageAr = "البريد الإلكتروني للمستخدم غير موجود في الرمز"
-                    }
-                };
 
             var user = await _userRepo.FindOneAsync(u => u.Email == userEmail);
 
-            if (user == null)
+            var oldToken = await _refreshTokenRepo
+                .FindOneAsync(rt => rt.UserId == user.Id && rt.Token == dto.RefreshToken && !rt.IsRevoked && !rt.IsUsed);
+
+            if (oldToken == null || oldToken.IsRevoked || oldToken.IsUsed || oldToken.Expires < DateTime.UtcNow)
                 return new ResponseResult
                 {
                     Result = Result.NoDataFound,
@@ -135,38 +142,43 @@ namespace ReservationSystem.Application.Service
                     {
                         AlartType = AlartType.error,
                         type = AlartShow.popup,
-                        MessageEn = "User not found",
-                        MessageAr = "المستخدم غير موجود"
+                        MessageEn = "Refresh token not found or invalid",
+                        MessageAr = "رمز التحديث غير موجود أو غير صالح"
                     }
                 };
+
+            oldToken.IsRevoked = true;
+            oldToken.IsUsed = true;
 
             var roleName = await _roleRepo.GetByIdAsync(user.RoleId);
-            if (roleName == null)
-                return new ResponseResult
-                {
-                    Result = Result.NoDataFound,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.error,
-                        type = AlartShow.popup,
-                        MessageEn = "Role not found for the user",
-                        MessageAr = "الدور غير موجود للمستخدم"
-                    }
-                };
 
-            var accessToken = _tokenService.GenerateAccessToken(user, roleName.Name);
-            var refreshToken = _tokenService.GenerateRefreshToken();
+            var newAccess = _tokenService.GenerateAccessToken(user, roleName.Name);
+            var newRefresh = _tokenService.GenerateRefreshToken();
+
+            var newToken = new RefreshToken
+            {
+                UserId = user.Id,
+                Token = newRefresh,
+                Expires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays),
+                IsRevoked = false,
+                IsUsed = false
+            };
+
+            _refreshTokenRepo.Update(oldToken);
+            await _refreshTokenRepo.AddAsync(newToken);
+            await _uow.SaveAsync();
+
 
             return new ResponseResult
             {
                 Result = Result.Success,
-                Data = new TokenDto { AccessToken = accessToken, RefreshToken = refreshToken },
+                Data = new TokenDto { AccessToken = newAccess, RefreshToken = newRefresh },
                 Alart = new Alart
                 {
                     AlartType = AlartType.success,
                     type = AlartShow.popup,
-                    MessageEn = "Tokens refreshed successfully",
-                    MessageAr = "تم تحديث الرموز بن"
+                    MessageEn = "Token refreshed successfully",
+                    MessageAr = "تم تحديث الرمز بنجاح"
                 }
             };
 

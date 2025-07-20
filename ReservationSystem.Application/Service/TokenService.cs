@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using ReservationSystem.Domain.Entities;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,12 +12,16 @@ namespace ReservationSystem.Application.Service
 {
     public class TokenService : ITokenService
     {
-        private readonly IConfiguration _config;
-        private static readonly Dictionary<string, string> _refreshTokens = new(); // in-memory storage
-
-        public TokenService(IConfiguration config)
+        private readonly JwtSettings _jwtSettings;
+        private readonly IGenericRepository<User> _userRepo;
+        private readonly IGenericRepository<RefreshToken> _refreshTokenRepo;
+        private readonly IUnitOfWork _uow;
+        public TokenService(IOptions<JwtSettings> jwtOptions, IUnitOfWork uow)
         {
-            _config = config;
+            _jwtSettings = jwtOptions.Value;
+            _uow = uow;
+            _userRepo = _uow.Repository<User>();
+            _refreshTokenRepo = _uow.Repository<RefreshToken>();
         }
 
         public string GenerateAccessToken(User user, string role)
@@ -29,25 +34,26 @@ namespace ReservationSystem.Application.Service
                      new Claim(ClaimTypes.Role, role)
                  };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(double.Parse(_config["JwtSettings:DurationInMinutes"])),
+                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes),
                 signingCredentials: creds
             );
+            // Return the token as a string
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public string GenerateRefreshToken()
         {
-            var byteArray = new byte[32];
+            var random = new byte[32];
             using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(byteArray);
-            return Convert.ToBase64String(byteArray);
+            rng.GetBytes(random);
+            return Convert.ToBase64String(random);
         }
 
 
@@ -59,9 +65,9 @@ namespace ReservationSystem.Application.Service
                 ValidateIssuer = true,
                 ValidateIssuerSigningKey = true,
                 ValidateLifetime = false, // We are allowing expired token to extract claims
-                ValidIssuer = _config["Jwt:Issuer"],
-                ValidAudience = _config["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]))
+                ValidIssuer = _jwtSettings.Issuer,
+                ValidAudience = _jwtSettings.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key))
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -74,29 +80,6 @@ namespace ReservationSystem.Application.Service
             }
 
             return principal;
-        }
-
-
-
-        public void SaveRefreshToken(string email, string refreshToken)
-        {
-            if (_refreshTokens.ContainsKey(email))
-                _refreshTokens[email] = refreshToken;
-            else
-                _refreshTokens.Add(email, refreshToken);
-        }
-
-
-        public string GetSavedRefreshToken(string email)
-        {
-            return _refreshTokens.TryGetValue(email, out var token) ? token : null;
-        }
-
-
-        public void RemoveRefreshToken(string email)
-        {
-            if (_refreshTokens.ContainsKey(email))
-                _refreshTokens.Remove(email);
         }
 
 

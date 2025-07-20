@@ -5,7 +5,6 @@ namespace ReservationSystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Ensure all endpoints require authentication
     public class ItemController : Controller
     {
         private readonly IItemService _itemService;
