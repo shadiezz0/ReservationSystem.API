@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.OpenApi.Models;
 using System;
 using ReservationSystem.Domain.Entities;
+using ReservationSystem.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +92,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//afnan ht3ml Serilog
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
