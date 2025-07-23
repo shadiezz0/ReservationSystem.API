@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using ReservationSystem.Application.IService;
-
+﻿
 namespace ReservationSystem.Application.Service
 {
     public class ItemService : IItemService

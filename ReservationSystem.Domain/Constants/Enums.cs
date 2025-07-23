@@ -9,6 +9,7 @@
             Exist = 2,
             NoDataFound = 3,
             NotExsit = 4,
+            Unauthorized = 5,
         }
 
         public enum AlartType
@@ -16,7 +17,8 @@
             information = 0,
             warning = 1,
             error = 2,
-            success = 3
+            success = 3,
+            Unauthorized = 4,
         }
 
         public enum AlartShow
@@ -33,6 +35,11 @@
             Delete
         }
 
+        public enum RoleType
+        {
+            SuperAdmin = 1,
+            User = 2
+        }
 
     }
 }

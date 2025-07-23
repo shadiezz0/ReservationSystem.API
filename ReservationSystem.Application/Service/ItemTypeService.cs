@@ -1,5 +1,4 @@
-﻿using ReservationSystem.Application.IService;
-
+﻿
 public class ItemTypeService : IItemTypeService
 {
     private readonly IGenericRepository<ItemType> _ItemTyperepo;

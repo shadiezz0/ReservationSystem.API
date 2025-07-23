@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using ReservationSystem.Application.IService;
 using System.Security.Claims;
 
 
@@ -9,6 +8,8 @@ namespace ReservationSystem.Application.Service
     {
         private readonly IUnitOfWork _uow;
         private readonly IGenericRepository<User> _userRepo;
+        private readonly IGenericRepository<Permission> _permRepo;
+        private readonly IGenericRepository<RolePermission> _rolePermRepo;
         private readonly IGenericRepository<Role> _roleRepo;
         private readonly IGenericRepository<RefreshToken> _refreshTokenRepo;
         private readonly ITokenService _tokenService;
@@ -19,6 +20,8 @@ namespace ReservationSystem.Application.Service
             _uow = uow;
             _userRepo = uow.Repository<User>();
             _roleRepo = uow.Repository<Role>();
+            _permRepo = uow.Repository<Permission>();
+            _rolePermRepo = uow.Repository<RolePermission>();
             _refreshTokenRepo = uow.Repository<RefreshToken>();
             _tokenService = tokenService;
             _jwtSettings = jwtOptions.Value;
@@ -46,7 +49,7 @@ namespace ReservationSystem.Application.Service
                 Name = dto.FullName,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                RoleId = dto.RoleId,
+                RoleId = 2 //user role,
             };
 
             await _userRepo.AddAsync(user);
@@ -184,11 +187,7 @@ namespace ReservationSystem.Application.Service
 
         }
 
-
-
-
-
-
+     
     }
 
 

@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using ReservationSystem.Domain.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -13,15 +11,9 @@ namespace ReservationSystem.Application.Service
     public class TokenService : ITokenService
     {
         private readonly JwtSettings _jwtSettings;
-        private readonly IGenericRepository<User> _userRepo;
-        private readonly IGenericRepository<RefreshToken> _refreshTokenRepo;
-        private readonly IUnitOfWork _uow;
-        public TokenService(IOptions<JwtSettings> jwtOptions, IUnitOfWork uow)
+        public TokenService(IOptions<JwtSettings> jwtOptions)
         {
             _jwtSettings = jwtOptions.Value;
-            _uow = uow;
-            _userRepo = _uow.Repository<User>();
-            _refreshTokenRepo = _uow.Repository<RefreshToken>();
         }
 
         public string GenerateAccessToken(User user, string role)

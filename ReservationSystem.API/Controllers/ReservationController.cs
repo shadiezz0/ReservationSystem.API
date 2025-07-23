@@ -1,5 +1,4 @@
-﻿using ReservationSystem.Application.IService;
-
+﻿
 namespace ReservationSystem.API.Controllers
 {
     [ApiController]
@@ -7,16 +6,23 @@ namespace ReservationSystem.API.Controllers
     public class ReservationController : ControllerBase
     {
         private readonly IReservationService _reservationService;
+        private readonly IPermissionCheckerService _permissionCheckerService;
 
-        public ReservationController(IReservationService reservationService)
+
+        public ReservationController(IReservationService reservationService, IPermissionCheckerService permissionCheckerService)
         {
             _reservationService = reservationService;
+            _permissionCheckerService = permissionCheckerService;
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<IActionResult> GetAll()
         {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync("Reservations", "show");
+            if (permissionResult != null)
+                return Ok(permissionResult); // or return Forbid()
+
             var result = await _reservationService.GetAllAsync();
             return Ok(result);
         }

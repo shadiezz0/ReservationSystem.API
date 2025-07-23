@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using ReservationSystem.Application.IService;
 using ReservationSystem.Application.Mappings;
 using ReservationSystem.Application.Service;
 
@@ -13,6 +12,9 @@ namespace ReservationSystem.Application
             services.AddScoped<IReservationService, ReservationService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IPermissionCheckerService, PermissionCheckerService>();
+            services.AddScoped<IItemTypeService, ItemTypeService>();
+            services.AddScoped<IItemService, ItemService>();
             return services;
         }
     }
