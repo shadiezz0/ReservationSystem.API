@@ -23,7 +23,8 @@ namespace ReservationSystem.Application.Service
                      new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                      new Claim(ClaimTypes.Email, user.Email),
                      new Claim(ClaimTypes.Name, user.Name),
-                     new Claim(ClaimTypes.Role, role)
+                     new Claim(ClaimTypes.Role, role),
+                     new Claim("role_id", user.RoleId.ToString())
                  };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));

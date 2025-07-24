@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace ReservationSystem.Application.Service
 {
@@ -26,7 +27,7 @@ namespace ReservationSystem.Application.Service
             }
         };
 
-        public async Task<ResponseResult> HasPermissionAsync(string resource, string action)
+        public async Task<ResponseResult> HasPermissionAsync(ResourceType resource, PermissionAction action)
         {
             var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
@@ -34,27 +35,35 @@ namespace ReservationSystem.Application.Service
                 return ReturnUnAuthorized;
             }
 
-            var user = await _userRepo.FindOneAsync(u => u.Id == userId);
+            var user = await _userRepo
+                        .FindOneAsync(
+                            predicate: u => u.Id == userId,
+                            include: query => query
+                                .Include(u => u.Role)
+                                    .ThenInclude(r => r.RolePermissions)
+                                        .ThenInclude(rp => rp.Permission)
+                        );
+
 
             if (user == null)
                 return ReturnUnAuthorized;
 
-            if (user.Role.Type == RoleType.SuperAdmin)
+            if (user.Role.RoleType == RoleType.SuperAdmin)
                 return null;
 
             var permission = user.Role.RolePermissions
                 .Select(rp => rp.Permission)
-                .FirstOrDefault(p => p.Resource.Equals(resource, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(p => p.Resource.ToString().Equals(resource.ToString(), StringComparison.OrdinalIgnoreCase));
 
             if (permission == null)
                 return ReturnUnAuthorized;
 
-            var isAuthorized = action.ToLower() switch
+            var isAuthorized = action switch
             {
-                "show" => permission.isShow,
-                "add" => permission.isAdd,
-                "edit" => permission.isEdit,
-                "delete" => permission.isDelete,
+                PermissionAction.Show => permission.isShow,
+                PermissionAction.Add => permission.isAdd,
+                PermissionAction.Edit => permission.isEdit,
+                PermissionAction.Delete => permission.isDelete,
                 _ => false
             };
 

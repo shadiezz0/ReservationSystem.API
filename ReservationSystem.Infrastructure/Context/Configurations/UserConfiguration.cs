@@ -9,16 +9,6 @@
             builder.HasMany(u => u.Reservations)
                    .WithOne(r => r.User)
                    .HasForeignKey(r => r.UserId);
-
-
-            builder.HasData(new User
-            {
-                Id = 1,
-                Name = "Sh",
-                Email = "Sh@example.com", // ✅ REQUIRED field
-                PasswordHash = "Sh",
-                RoleId = 1
-            });
         }
     }
 }

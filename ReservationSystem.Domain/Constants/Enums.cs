@@ -34,11 +34,21 @@
             Edit,
             Delete
         }
+        public enum ResourceType
+        {
+            Reservations,
+            Items,
+            Users,
+            Roles,
+            Permissions,
+            ItemTypes
+        }
 
         public enum RoleType
         {
             SuperAdmin = 1,
-            User = 2
+            Admin = 2,
+            User = 3
         }
 
     }

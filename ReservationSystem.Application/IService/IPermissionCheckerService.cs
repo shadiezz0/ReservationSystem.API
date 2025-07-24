@@ -2,7 +2,7 @@
 {
     public interface IPermissionCheckerService
     {
-        Task<ResponseResult> HasPermissionAsync(string resource, string action);
+        Task<ResponseResult> HasPermissionAsync(ResourceType resource, PermissionAction action);
     }
 
 }

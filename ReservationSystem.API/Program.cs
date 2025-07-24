@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.OpenApi.Models;
 using System;
 using ReservationSystem.Domain.Entities;
+using ReservationSystem.Infrastructure.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,12 +86,16 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
+    var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+    await seeder.SeedAsync(); // run only once at startup
+}
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
