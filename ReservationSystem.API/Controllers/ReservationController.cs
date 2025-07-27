@@ -50,7 +50,7 @@ namespace ReservationSystem.API.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> Update(UpdateReservationDto dto)
         {
             var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Reservations, PermissionAction.Edit);
@@ -61,7 +61,7 @@ namespace ReservationSystem.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Reservations, PermissionAction.Delete);
@@ -80,7 +80,7 @@ namespace ReservationSystem.API.Controllers
         }
 
         [HttpPut("confirm/{id}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Confirm(int id)
         {
             var result = await _reservationService.ConfirmReservationAsync(id);
@@ -88,7 +88,7 @@ namespace ReservationSystem.API.Controllers
         }
 
         [HttpPut("cancel/{id}")]
-        [Authorize(Roles = "User,SuperAdmin,Admin")]
+        [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> Cancel(int id)
         {
             var result = await _reservationService.CancelReservationAsync(id);

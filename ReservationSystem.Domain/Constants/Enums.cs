@@ -36,12 +36,12 @@
         }
         public enum ResourceType
         {
-            Reservations,
-            Items,
-            Users,
-            Roles,
-            Permissions,
-            ItemTypes
+            Reservations = 1,
+            Items = 2,
+            Users = 3,
+            Roles = 4,
+            Permissions = 5,
+            ItemTypes = 6
         }
 
         public enum RoleType

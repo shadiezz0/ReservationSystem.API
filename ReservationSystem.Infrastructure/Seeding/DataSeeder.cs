@@ -1,7 +1,10 @@
 ﻿
 using BCrypt.Net;
 using ReservationSystem.Domain.Interfaces;
+using System.Security.AccessControl;
 using static ReservationSystem.Domain.Constants.Enums;
+using ResourceType = ReservationSystem.Domain.Constants.Enums.ResourceType;
+
 
 namespace ReservationSystem.Infrastructure.Seeding
 {
@@ -25,7 +28,7 @@ namespace ReservationSystem.Infrastructure.Seeding
         public async Task SeedAsync()
         {
             // Seed Roles if exsists and if not create them
-            var superAdmin = await EnsureRoleExists("SuperAdmin", RoleType.SuperAdmin);
+            var superAdmin = await EnsureRoleExists("SuperAdmin",RoleType.SuperAdmin);
             var admin = await EnsureRoleExists("Admin", RoleType.Admin);
             var user = await EnsureRoleExists("User", RoleType.User);
 
