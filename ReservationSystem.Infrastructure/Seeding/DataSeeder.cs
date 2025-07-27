@@ -42,7 +42,7 @@ namespace ReservationSystem.Infrastructure.Seeding
 
             await AssignPermissionsToRole(admin.Id, adminPermissions);
 
-            // Seed SuperAdmin User
+            // Seed SuperAdmin User and If not, creates one
             var existingUser = await _userRepo.FindOneAsync(u => u.Email == "sh@sys.com");
             if (existingUser == null)
             {
@@ -53,10 +53,8 @@ namespace ReservationSystem.Infrastructure.Seeding
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("sh123"),
                     RoleId = superAdmin.Id
                 };
-
                 await _userRepo.AddAsync(superUser);
             }
-
             await _uow.SaveAsync();
         }
 

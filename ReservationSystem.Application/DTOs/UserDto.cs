@@ -5,7 +5,7 @@
             public string FullName { get; set; }
             public string Email { get; set; }
             public string Password { get; set; }
-            public int RoleId { get; set; } // Default to User role
+            public int RoleId { get; set; } = (int)RoleType.User; // Default to User role
 
     }
 

@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.EntityFrameworkCore;
+
 namespace ReservationSystem.Application.Service
 {
     public class ItemService : IItemService
@@ -76,7 +78,7 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> FilterAvailableAsync()
         {
-            var items = await _Itemrepo.FindAllAsync(item => item.IsAvailable);
+            var items = await _Itemrepo.FindAllAsync(item => item.IsAvailable, asNoTracking: true);
             if (items == null || !items.Any())
             {
                 return new ResponseResult
@@ -108,7 +110,7 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> FilterByTypeAsync(int itemTypeId)
         {
-            var items = await _Itemrepo.FindAllAsync(item => item.ItemTypeId == itemTypeId);
+            var items = await _Itemrepo.FindAllAsync(item => item.ItemTypeId == itemTypeId, asNoTracking: true);
             if (items == null || !items.Any())
             {
                 return new ResponseResult
@@ -141,8 +143,10 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> GetAllAsync()
         {
-            var items = await _Itemrepo.GetAllAsync();
-            if (items == null || !items.Any())
+            var items = await _Itemrepo.GetAllAsync(
+                include: query => query.Include(i => i.ItemType),
+                asNoTracking: true
+            ); if (items == null || !items.Any())
             {
                 return new ResponseResult
                 {
@@ -173,7 +177,7 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> GetByIdAsync(int id)
         {
-            var item = await _Itemrepo.GetByIdAsync(id);
+            var item = await _Itemrepo.GetByIdAsync(id, asNoTracking: true);
             if (item == null)
             {
                 return new ResponseResult

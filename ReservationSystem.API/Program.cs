@@ -18,7 +18,6 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSet
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 builder.Services.AddControllers(options =>
 {
     var policy = new AuthorizationPolicyBuilder()
@@ -86,14 +85,17 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+
+// Auto-seed 
 using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
     await seeder.SeedAsync(); // run only once at startup
 }
+
 //if (app.Environment.IsDevelopment())
 //{
-    app.UseSwagger();
+app.UseSwagger();
     app.UseSwaggerUI();
 //}
 

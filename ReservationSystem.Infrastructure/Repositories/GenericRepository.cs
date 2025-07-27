@@ -18,10 +18,13 @@ namespace ReservationSystem.Infrastructure.Repositories
 
         public async Task<IEnumerable<T>> GetAllAsync(
                             Expression<Func<T, bool>>? predicate = null,
-                            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
-                        )
+                            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+                            bool asNoTracking = false)
         {
             IQueryable<T> query = _dbSet;
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
 
             if (predicate != null)
                 query = query.Where(predicate);
@@ -34,14 +37,17 @@ namespace ReservationSystem.Infrastructure.Repositories
 
 
         public async Task<T?> FindOneAsync(
-            Expression<Func<T, bool>> predicate,
-            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
-        )
+                            Expression<Func<T, bool>> predicate,
+                            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+                            bool asNoTracking = false)
         {
             IQueryable<T> query = _dbSet;
 
             if (include != null)
                 query = include(query);
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
 
             return await query.FirstOrDefaultAsync(predicate);
         }
@@ -49,9 +55,12 @@ namespace ReservationSystem.Infrastructure.Repositories
         public async Task<T?> GetByIdAsync(
                                         int id,
                                         Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
-                                         )
+                                         , bool asNoTracking = false)
         {
             IQueryable<T> query = _dbSet;
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
 
             if (include != null)
                 query = include(query);
@@ -59,12 +68,24 @@ namespace ReservationSystem.Infrastructure.Repositories
             return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
         }
 
+        public async Task<IEnumerable<T>> FindAllAsync(
+                                            Expression<Func<T, bool>> predicate
+                                            , bool asNoTracking = false)
+        {
+            IQueryable<T> query = _dbSet.Where(predicate);
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            return await query.ToListAsync();
+        }
+
         public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
         public void Update(T entity) => _dbSet.Update(entity);
         public void Delete(T entity) => _dbSet.Remove(entity);
         public void DeleteRange(IEnumerable<T> entities) => _dbSet.RemoveRange(entities);
-        public async Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate)
-        => await _dbSet.Where(predicate).ToListAsync();
+
+    
 
     }
 }

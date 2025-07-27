@@ -7,23 +7,32 @@ namespace ReservationSystem.Domain.Interfaces
     {
         Task<T?> GetByIdAsync(
            int id,
-           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
+           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+           bool asNoTracking = false
        );
 
         Task<IEnumerable<T>> GetAllAsync(
            Expression<Func<T, bool>>? predicate = null,
-           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
+           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+           bool asNoTracking = false
        );
 
-        Task<IEnumerable<T>> FindAllAsync(Expression<Func<T, bool>> predicate);
+        Task<IEnumerable<T>> FindAllAsync(
+            Expression<Func<T, bool>> predicate,
+            bool asNoTracking = false
+       );
+
+        Task<T?> FindOneAsync(
+           Expression<Func<T, bool>> predicate,
+           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, 
+           bool asNoTracking = false
+       );
+
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
         void DeleteRange(IEnumerable<T> entities);
 
-        Task<T?> FindOneAsync(
-           Expression<Func<T, bool>> predicate,
-           Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
-       );
+
     }
 }
