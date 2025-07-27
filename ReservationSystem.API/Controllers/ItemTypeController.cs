@@ -2,7 +2,7 @@
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public class ItemTypeController : ControllerBase
     {
         private readonly IItemTypeService _service;
