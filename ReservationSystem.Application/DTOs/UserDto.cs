@@ -21,4 +21,20 @@
             public string RefreshToken { get; set; }
       }
 
+    public class CreateRoleDto
+    {
+        public string Name { get; set; }
+        public RoleType RoleType { get; set; }
+    }
+    public class GetRoleDto : CreateRoleDto
+    {
+        public int Id { get; set; }
+
+    }
+
+    public class UpdateRolePermissionsDto
+    {
+        public List<int> PermissionIds { get; set; }
+    }
+
 }

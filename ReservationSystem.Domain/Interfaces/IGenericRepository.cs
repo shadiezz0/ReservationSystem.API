@@ -19,6 +19,7 @@ namespace ReservationSystem.Domain.Interfaces
 
         Task<IEnumerable<T>> FindAllAsync(
             Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
             bool asNoTracking = false
        );
 
