@@ -1,5 +1,4 @@
-﻿using ReservationSystem.Application.IService;
-
+﻿
 public class ItemTypeService : IItemTypeService
 {
     private readonly IGenericRepository<ItemType> _ItemTyperepo;
@@ -69,7 +68,7 @@ public class ItemTypeService : IItemTypeService
 
     public async Task<ResponseResult> GetAllAsync()
     {
-        var itemTypes = await _ItemTyperepo.GetAllAsync();
+        var itemTypes = await _ItemTyperepo.GetAllAsync(asNoTracking: true);
         if (itemTypes == null || !itemTypes.Any())
         {
             return new ResponseResult
@@ -100,7 +99,7 @@ public class ItemTypeService : IItemTypeService
 
     public async Task<ResponseResult> GetByIdAsync(int id)
     {
-        var itemType = await _ItemTyperepo.GetByIdAsync(id);
+        var itemType = await _ItemTyperepo.GetByIdAsync(id, asNoTracking: true);
         if (itemType == null)
         {
             return new ResponseResult
@@ -167,7 +166,5 @@ public class ItemTypeService : IItemTypeService
             }
         };
     }
-
-
 
 }

@@ -1,8 +1,9 @@
-﻿
-namespace ReservationSystem.Infrastructure.Context.Configurations
+﻿namespace ReservationSystem.Infrastructure.Context.Configurations
 {
     public class PermissionConfigration : IEntityTypeConfiguration<Permission>
     {
-        public void Configure(EntityTypeBuilder<Permission> builder){}
+        public void Configure(EntityTypeBuilder<Permission> builder)
+        {
+        }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ReservationSystem.Domain.Interfaces;
 using ReservationSystem.Infrastructure.Context;
 using ReservationSystem.Infrastructure.Repositories;
+using ReservationSystem.Infrastructure.Seeding;
 
 namespace ReservationSystem.Infrastructure
 {
@@ -15,6 +16,7 @@ namespace ReservationSystem.Infrastructure
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IDataSeeder, DataSeeder>();
 
             return services;
         }

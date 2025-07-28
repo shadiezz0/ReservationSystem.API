@@ -1,4 +1,5 @@
-﻿using ReservationSystem.Application.IService;
+﻿
+using Microsoft.EntityFrameworkCore;
 
 namespace ReservationSystem.Application.Service
 {
@@ -100,7 +101,10 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> GetAllAsync()
         {
-            var data = await _reservation.GetAllAsync();
+            var data = await _reservation.GetAllAsync(
+                        include: q => q.Include(r => r.Item).Include(r => r.User),
+                        asNoTracking: true
+                    );
             var result = data.Select(r => new ReservationDto
             {
                 Id = r.Id,
@@ -128,7 +132,12 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> GetByIdAsync(int id)
         {
-            var res = await _reservation.GetByIdAsync(id);
+            var res = await _reservation.GetByIdAsync(
+                            id,
+                            include: q => q.Include(r => r.Item).Include(r => r.User),
+                            asNoTracking: true
+                        );
+
             if (res == null)
                 return new ResponseResult
                 {
@@ -217,7 +226,10 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> GetByUserIdAsync(int userId)
         {
-            var reservations = await _reservation.FindAllAsync(r => r.UserId == userId);
+            var reservations = await _reservation.FindAllAsync(
+                        predicate: r => r.UserId == userId,
+                        asNoTracking: true
+                    );
             if (reservations == null || !reservations.Any())
                 return new ResponseResult
                 {
@@ -350,7 +362,10 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
-            var reservations = await _reservation.FindAllAsync(r => r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate);
+            var reservations = await _reservation.FindAllAsync(
+                r => r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate,
+                asNoTracking: true
+            );
             if (reservations == null || !reservations.Any())
                 return new ResponseResult
                 {

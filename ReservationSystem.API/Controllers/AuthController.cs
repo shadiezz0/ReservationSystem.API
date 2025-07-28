@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ReservationSystem.Application.DTOs;
-using ReservationSystem.Application.IService;
+﻿
 
 namespace ReservationSystem.API.Controllers
 {
@@ -29,14 +27,6 @@ namespace ReservationSystem.API.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(TokenDto dto) =>
             Ok(await _authService.RefreshTokenAsync(dto));
-
-        //Revoke endpoint logs a user out by removing their refresh token.
-        [HttpPost("revoke")]
-        public IActionResult Revoke([FromBody] string email)
-        {
-            _auth.RevokeRefreshToken(email);
-            return NoContent();
-        }
     }
 
 }

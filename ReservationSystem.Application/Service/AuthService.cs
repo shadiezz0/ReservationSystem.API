@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Options;
-using ReservationSystem.Application.IService;
 using System.Security.Claims;
 
 
@@ -46,7 +45,7 @@ namespace ReservationSystem.Application.Service
                 Name = dto.FullName,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                RoleId = dto.RoleId,
+                RoleId = dto.RoleId
             };
 
             await _userRepo.AddAsync(user);
@@ -184,11 +183,7 @@ namespace ReservationSystem.Application.Service
 
         }
 
-
-
-
-
-
+    
     }
 
 
