@@ -1,4 +1,6 @@
-﻿namespace ReservationSystem.Application.Service
+﻿using ReservationSystem.Domain.Entities;
+
+namespace ReservationSystem.Application.Service
 {
     public class RoleService : IRoleService
     {
@@ -68,10 +70,15 @@
             };
         }
 
-        public async Task<List<Permission>> GetPermissionsForRoleAsync(int roleId)
+        public async Task<ResponseResult> GetPermissionsForRoleAsync(int roleId)
         {
             var rolePermissions = await _rolePermissionRepo.FindAllAsync(rp => rp.RoleId == roleId);
-        }
+            return new ResponseResult
+            {
+                Data = rolePermissions,
+                Result = Result.Success,
+            };
+        }   
 
         public async Task AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds)
         {

@@ -2,9 +2,9 @@
 {
     public interface IRoleService
     {
-        Task<List<ResponseResult>> GetAllRolesAsync();
-        Task<ResponseResult> CreateRoleAsync(RoleDto dto);
-        Task<List<ResponseResult>> GetPermissionsForRoleAsync(int roleId);
+        Task<ResponseResult> GetAllRolesAsync();
+        Task<ResponseResult> CreateRoleAsync(CreateRoleDto dto);
+        Task<ResponseResult> GetPermissionsForRoleAsync(int roleId);
         Task AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds);
     }
 
