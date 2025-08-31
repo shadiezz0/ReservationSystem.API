@@ -11,14 +11,9 @@ namespace ReservationSystem.Application.DTOs
     {
     }
     
-    public class GetRoleDto : CreateRoleDto
+    public class GetRoleDto : CreateRoleDto 
     {
         public int Id { get; set; }
-    }
-
-    public class UpdateRolePermissionsDto
-    {
-        public List<int> PermissionIds { get; set; }
     }
 
     public class RoleDetailDto
