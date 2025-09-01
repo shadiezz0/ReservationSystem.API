@@ -6,17 +6,13 @@ namespace ReservationSystem.Application.Service
     {
         private readonly IUnitOfWork _uow;
         private readonly IGenericRepository<Role> _roleRepo;
-        private readonly IGenericRepository<Permission> _permissionRepo;
         private readonly IGenericRepository<RolePermission> _rolePermissionRepo;
-        private readonly IGenericRepository<User> _userRepo;
 
         public RoleService(IUnitOfWork uow)
         {
             _uow = uow;
             _roleRepo = uow.Repository<Role>();
-            _permissionRepo = uow.Repository<Permission>();
             _rolePermissionRepo = uow.Repository<RolePermission>();
-            _userRepo = uow.Repository<User>();
         }
 
         public async Task<ResponseResult> GetAllRolesAsync()

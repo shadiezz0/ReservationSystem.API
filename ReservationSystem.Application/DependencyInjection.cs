@@ -15,6 +15,7 @@ namespace ReservationSystem.Application
             services.AddScoped<IPermissionCheckerService, PermissionCheckerService>();
             services.AddScoped<IItemTypeService, ItemTypeService>();
             services.AddScoped<IItemService, ItemService>();
+            services.AddScoped<IRoleService, RoleService>();
             services.AddHttpContextAccessor();
             return services;
         }
