@@ -1,5 +1,7 @@
 ﻿
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ReservationSystem.Application.Service
 {
@@ -8,11 +10,13 @@ namespace ReservationSystem.Application.Service
         private readonly IGenericRepository<Reservation> _reservation;
         private readonly IGenericRepository<Item> _itemRepo;
         private readonly IUnitOfWork _uow;
-        public ReservationService(IUnitOfWork uow)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public ReservationService(IUnitOfWork uow, IHttpContextAccessor httpContextAccessor)
         {
             _reservation = uow.Repository<Reservation>();
             _itemRepo = uow.Repository<Item>();
             _uow = uow;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ResponseResult> CreateAsync(CreateReservationDto dto)
@@ -30,13 +34,31 @@ namespace ReservationSystem.Application.Service
                         MessageEn = "Item not found.",
                     }
                 };
+            var CheckIsAvailable = await FilterByIsAvilableAsync(dto);
+            if (!CheckIsAvailable)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.NoDataFound,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.note,
+                        MessageAr = "الحجز غير متاح حالياً",
+                        MessageEn = "Reservation is Currently not available.",
+                    }
+                };
+            }
+            var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             var reservation = new Reservation
             {
                 ReservationDate = dto.ReservationDate,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
                 ItemId = dto.ItemId,
-                UserId = dto.UserId,
+                UserId = int.Parse(userIdString),
+                IsAvailable = false,
                 Status = "Pending",
                 TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours // Assuming TotalPrice is calculated based on hours
             };
@@ -359,13 +381,29 @@ namespace ReservationSystem.Application.Service
                 }
             };
         }
+        public async Task<bool> FilterByIsAvilableAsync(CreateReservationDto dto)
+        {
+            var reservations = await _reservation.FindAllAsync(
+                r => r.ReservationDate == dto.ReservationDate 
+                && r.StartTime == dto.StartTime && r.EndTime == dto.EndTime 
+                && r.IsAvailable == false && r.ItemId == dto.ItemId,
+                asNoTracking: true
+            );
+            if (reservations.Any())
+                return false;
 
+
+            return true;
+
+
+        }
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
             var reservations = await _reservation.FindAllAsync(
-                r => r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate,
+                r => r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate ,
                 asNoTracking: true
             );
+            var CheckIsavailable = reservations.Where(r => r.IsAvailable == false && r.ItemId == dto.ItemId);
             if (reservations == null || !reservations.Any())
                 return new ResponseResult
                 {

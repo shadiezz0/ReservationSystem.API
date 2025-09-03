@@ -7,7 +7,6 @@
         Task<ResponseResult> DeleteAsync(int id);
         Task<ResponseResult> GetAllAsync();
         Task<ResponseResult> GetByIdAsync(int id);
-        Task<ResponseResult> FilterAvailableAsync();
         Task<ResponseResult> FilterByTypeAsync(int itemTypeId);
     }
 }

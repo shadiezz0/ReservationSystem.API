@@ -20,7 +20,6 @@ namespace ReservationSystem.Application.Service
                 Name = dto.Name,
                 Description = dto.Description,
                 PricePerHour = dto.PricePerHour,
-                IsAvailable = dto.IsAvailable,
                 ItemTypeId = dto.ItemTypeId
             };
 
@@ -76,37 +75,37 @@ namespace ReservationSystem.Application.Service
 
         }
 
-        public async Task<ResponseResult> FilterAvailableAsync()
-        {
-            var items = await _Itemrepo.FindAllAsync(item => item.IsAvailable, asNoTracking: true);
-            if (items == null || !items.Any())
-            {
-                return new ResponseResult
-                {
-                    Result = Result.Failed,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.warning,
-                        type = AlartShow.note,
-                        MessageAr = "لا توجد عناصر متاحة.",
-                        MessageEn = "No available items found."
-                    }
-                };
-            }
-            return new ResponseResult
-            {
-                DataCount = items.Count(),
-                Data = items,
-                Result = Result.Success,
-                Alart = new Alart
-                {
-                    AlartType = AlartType.success,
-                    type = AlartShow.note,
-                    MessageAr = "تم العثور على العناصر المتاحة.",
-                    MessageEn = "Available items found."
-                }
-            };
-        }
+        //public async Task<ResponseResult> FilterAvailableAsync()
+        //{
+        //    var items = await _Itemrepo.FindAllAsync(item => item.IsAvailable, asNoTracking: true);
+        //    if (items == null || !items.Any())
+        //    {
+        //        return new ResponseResult
+        //        {
+        //            Result = Result.Failed,
+        //            Alart = new Alart
+        //            {
+        //                AlartType = AlartType.warning,
+        //                type = AlartShow.note,
+        //                MessageAr = "لا توجد عناصر متاحة.",
+        //                MessageEn = "No available items found."
+        //            }
+        //        };
+        //    }
+        //    return new ResponseResult
+        //    {
+        //        DataCount = items.Count(),
+        //        Data = items,
+        //        Result = Result.Success,
+        //        Alart = new Alart
+        //        {
+        //            AlartType = AlartType.success,
+        //            type = AlartShow.note,
+        //            MessageAr = "تم العثور على العناصر المتاحة.",
+        //            MessageEn = "Available items found."
+        //        }
+        //    };
+        //}
 
         public async Task<ResponseResult> FilterByTypeAsync(int itemTypeId)
         {
@@ -227,7 +226,6 @@ namespace ReservationSystem.Application.Service
             item.Name = dto.Name;
             item.Description = dto.Description;
             item.PricePerHour = dto.PricePerHour;
-            item.IsAvailable = dto.IsAvailable;
             item.ItemTypeId = dto.ItemTypeId;
 
             _Itemrepo.Update(item);

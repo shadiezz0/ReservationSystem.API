@@ -50,13 +50,13 @@
             return Ok(result);
         }
 
-        [HttpGet("Available")]
-        [Authorize(Roles = "Admin,SuperAdmin,User")]
-        public async Task<IActionResult> GetAvailable()
-        {
-            var result = await _itemService.FilterAvailableAsync();
-            return Ok(result);
-        }
+        //[HttpGet("Available")]
+        //[Authorize(Roles = "Admin,SuperAdmin,User")]
+        //public async Task<IActionResult> GetAvailable()
+        //{
+        //    var result = await _itemService.FilterAvailableAsync();
+        //    return Ok(result);
+        //}
 
         [HttpGet("Type/{itemTypeId}")]
         [Authorize(Roles = "Admin,SuperAdmin,User")]

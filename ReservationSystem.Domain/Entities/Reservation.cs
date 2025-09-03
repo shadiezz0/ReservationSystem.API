@@ -7,10 +7,9 @@
         public DateTime ReservationDate { get; set; } // Only date
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
-
+        public bool IsAvailable { get; set; } = true;
         public double TotalPrice { get; set; }
         public string Status { get; set; } // "Pending", "Confirmed", "Cancelled"
-
         public int UserId { get; set; }
         public User User { get; set; }
 
