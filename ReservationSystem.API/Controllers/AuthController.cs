@@ -1,6 +1,4 @@
-﻿
-
-namespace ReservationSystem.API.Controllers
+﻿namespace ReservationSystem.API.Controllers
 {
 
     [ApiController]

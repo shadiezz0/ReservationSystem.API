@@ -2,30 +2,65 @@
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin,SuperAdmin")]
     public class ItemTypeController : ControllerBase
     {
         private readonly IItemTypeService _service;
-        public ItemTypeController(IItemTypeService service)
+        private readonly IPermissionCheckerService _permissionCheckerService;
+
+        public ItemTypeController(IItemTypeService service, IPermissionCheckerService permissionCheckerService)
         {
             _service = service;
+            _permissionCheckerService = permissionCheckerService;
         }
 
-
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
+        public async Task<IActionResult> GetAll()
+        {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.ItemTypes, PermissionAction.Show);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+
+            return Ok(await _service.GetAllAsync());
+        }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id) => Ok(await _service.GetByIdAsync(id));
+        public async Task<IActionResult> Get(int id)
+        {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.ItemTypes, PermissionAction.Show);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+
+            return Ok(await _service.GetByIdAsync(id));
+        }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateItemTypeDto dto) => Ok(await _service.CreateAsync(dto));
+        public async Task<IActionResult> Create(CreateItemTypeDto dto)
+        {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.ItemTypes, PermissionAction.Add);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+
+            return Ok(await _service.CreateAsync(dto));
+        }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(UpdateItemTypeDto dto) => Ok(await _service.UpdateAsync(dto));
+        public async Task<IActionResult> Update(UpdateItemTypeDto dto)
+        {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.ItemTypes, PermissionAction.Edit);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+
+            return Ok(await _service.UpdateAsync(dto));
+        }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id) => Ok(await _service.DeleteAsync(id));
+        public async Task<IActionResult> Delete(int id)
+        {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.ItemTypes, PermissionAction.Delete);
+            if (permissionResult != null)
+                return Ok(permissionResult);
 
+            return Ok(await _service.DeleteAsync(id));
+        }
     }
 }
