@@ -145,7 +145,10 @@ namespace ReservationSystem.Application.Service
             var items = await _Itemrepo.GetAllAsync(
                 include: query => query.Include(i => i.ItemType),
                 asNoTracking: true
-            ); if (items == null || !items.Any())
+            ); 
+            
+            
+            if (items == null || !items.Any())
             {
                 return new ResponseResult
                 {
