@@ -68,16 +68,13 @@
             return Ok(result);
         }
 
-        [HttpGet("Available")]
-        public async Task<IActionResult> GetAvailable()
-        {
-            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Items, PermissionAction.Show);
-            if (permissionResult != null)
-                return Ok(permissionResult);
-
-            var result = await _itemService.FilterAvailableAsync();
-            return Ok(result);
-        }
+        //[HttpGet("Available")]
+        //[Authorize(Roles = "Admin,SuperAdmin,User")]
+        //public async Task<IActionResult> GetAvailable()
+        //{
+        //    var result = await _itemService.FilterAvailableAsync();
+        //    return Ok(result);
+        //}
 
         [HttpGet("Type/{itemTypeId}")]
         public async Task<IActionResult> GetByType(int itemTypeId)

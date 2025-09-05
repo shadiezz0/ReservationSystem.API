@@ -52,8 +52,8 @@ namespace ReservationSystem.Application.Service
                 return null;
 
             var permission = user.Role.RolePermissions
-                .Select(rp => rp.Permission)
-                .FirstOrDefault(p => p.Resource.ToString().Equals(resource.ToString(), StringComparison.OrdinalIgnoreCase));
+        .Select(rp => rp.Permission)
+        .FirstOrDefault(p => p.Resource == resource);
 
             if (permission == null)
                 return ReturnUnAuthorized;
