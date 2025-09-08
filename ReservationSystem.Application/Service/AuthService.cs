@@ -45,7 +45,7 @@ namespace ReservationSystem.Application.Service
                 Name = dto.FullName,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                RoleId = dto.RoleId
+                RoleId = dto.RoleId == 0 ? (int)RoleType.User : dto.RoleId
             };
 
             await _userRepo.AddAsync(user);
