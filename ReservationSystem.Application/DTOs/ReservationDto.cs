@@ -49,6 +49,8 @@ namespace ReservationSystem.Application.DTOs
         public bool IsAvailable { get; set; }
 
         public int ItemId { get; set; }
+        public int ItemTypeId { get; set; }
+
     }
 
     public class UpdateReservationDto: CreateReservationDto
@@ -76,7 +78,7 @@ namespace ReservationSystem.Application.DTOs
         public DateTime ReservationDate { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
-        public string Status { get; set; }
+        public Status Status { get; set; }
         public bool IsAvailable { get; set; } = true;
         public double TotalPrice { get; set; }
     }

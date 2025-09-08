@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using ReservationSystem.Domain.Entities;
 using System.Security.Claims;
 
 namespace ReservationSystem.Application.Service
@@ -59,8 +60,9 @@ namespace ReservationSystem.Application.Service
                 ItemId = dto.ItemId,
                 UserId = int.Parse(userIdString),
                 IsAvailable = false,
-                Status = "Pending",
-                TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours // Assuming TotalPrice is calculated based on hours
+                Status = Status.Pending,
+                TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours, // Assuming TotalPrice is calculated based on hours
+                ItemTypeId =dto.ItemTypeId
             };
             await _reservation.AddAsync(reservation);
             var save = await _uow.SaveAsync();
@@ -199,6 +201,7 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> UpdateAsync(UpdateReservationDto dto)
         {
+            var item = await _itemRepo.GetByIdAsync(dto.ItemId);
             var res = await _reservation.GetByIdAsync(dto.Id);
             if (res == null)
                 return new ResponseResult
@@ -216,7 +219,9 @@ namespace ReservationSystem.Application.Service
             res.StartTime = dto.StartTime;
             res.EndTime = dto.EndTime;
             res.Status = dto.Status;
-
+            res.ItemTypeId = dto.ItemTypeId;
+            res.ItemId = dto.ItemId;
+            res.TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours;
             _reservation.Update(res);
             var save = await _uow.SaveAsync();
             if (save)
@@ -305,7 +310,7 @@ namespace ReservationSystem.Application.Service
                     }
                 };
 
-            if (res.Status != "Pending")
+            if (res.Status != Status.Pending)
                 return new ResponseResult
                 {
                     Result = Result.Failed,
@@ -318,7 +323,7 @@ namespace ReservationSystem.Application.Service
                     }
                 };
 
-            res.Status = "Confirmed";
+            res.Status = Status.Confirmed;
             _reservation.Update(res);
             await _uow.SaveAsync();
 
@@ -352,7 +357,7 @@ namespace ReservationSystem.Application.Service
                     }
                 };
 
-            if (res.Status == "Cancelled")
+            if (res.Status == Status.Cancelled)
                 return new ResponseResult
                 {
                     Result = Result.Failed,
@@ -365,7 +370,7 @@ namespace ReservationSystem.Application.Service
                     }
                 };
 
-            res.Status = "Cancelled";
+            res.Status = Status.Cancelled;
             _reservation.Update(res);
             await _uow.SaveAsync();
 
@@ -383,10 +388,14 @@ namespace ReservationSystem.Application.Service
         }
         public async Task<bool> FilterByIsAvilableAsync(CreateReservationDto dto)
         {
+            //startTime = 1 ,endTime = 2
+            //startTime = 2 ,endTime = 4
+            //request : start=3 ,end=4
             var reservations = await _reservation.FindAllAsync(
-                r => r.ReservationDate == dto.ReservationDate 
-                && r.StartTime == dto.StartTime && r.EndTime == dto.EndTime 
-                && r.IsAvailable == false && r.ItemId == dto.ItemId,
+                
+            r => r.ReservationDate == dto.ReservationDate 
+                &&( (r.StartTime == dto.StartTime && r.EndTime == dto.EndTime ) || (dto.StartTime < r.EndTime && dto.EndTime > r.StartTime))
+                && r.IsAvailable == false && r.ItemId == dto.ItemId && r.Status != Status.Cancelled,
                 asNoTracking: true
             );
             if (reservations.Any())
