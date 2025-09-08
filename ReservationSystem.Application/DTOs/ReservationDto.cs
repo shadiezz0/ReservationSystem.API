@@ -1,19 +1,60 @@
-﻿namespace ReservationSystem.Application.DTOs
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Globalization;
+
+namespace ReservationSystem.Application.DTOs
 {
+    // Json converter to serialize TimeSpan as "HH:mm"
+    public class TimeSpanHoursMinutesJsonConverter : JsonConverter<TimeSpan>
+    {
+        public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var s = reader.GetString();
+            if (string.IsNullOrWhiteSpace(s))
+                return default;
+
+            if (TimeSpan.TryParseExact(s, "hh\\:mm", CultureInfo.InvariantCulture, out var ts))
+                return ts;
+
+            if (TimeSpan.TryParse(s, out ts))
+                return ts;
+
+            throw new JsonException("Invalid time format. Expected 'HH:mm'.");
+        }
+
+        public override void Write(Utf8JsonWriter writer, TimeSpan value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.ToString("hh\\:mm"));
+        }
+    }
+
     public class CreateReservationDto
     {
         public DateTime ReservationDate { get; set; }
-        public TimeSpan StartTime { get; set; } = default(TimeSpan); //"hh:mm:ss" (e.g., "01:30:00")
-        public TimeSpan EndTime { get; set; }= default(TimeSpan);
-        public bool IsAvailable { get; set; } = true;
+
+        [JsonConverter(typeof(TimeSpanHoursMinutesJsonConverter))]
+        [DefaultValue("09:00")] // Shown in Swagger
+        [Display(Name = "Start Time (HH:mm)", Description = "Time in 24h format HH:mm")]
+        public TimeSpan StartTime { get; set; }
+
+        // Show default in Swagger as HH:mm and serialize as "HH:mm"
+        [JsonConverter(typeof(TimeSpanHoursMinutesJsonConverter))]
+        [DefaultValue("10:00")] // Swagger default (1 hour after sample StartTime)
+        [Display(Name = "End Time (HH:mm)", Description = "Time in 24h format HH:mm (must be after StartTime)")]
+        public TimeSpan EndTime { get; set; }
+
+        [DefaultValue(true)]
+        public bool IsAvailable { get; set; }
+
         public int ItemId { get; set; }
     }
-
 
     public class UpdateReservationDto: CreateReservationDto
     {
         public int Id { get; set; }
-        public string Status { get; set; } //Pending 1 / Confirmed 2 / Cancelled 3
+        public Status Status { get; set; } //Pending 1 / Confirmed 2 / Cancelled 3
     }
 
     public class FilterReservationDto
@@ -22,10 +63,11 @@
         public DateTime ToDate { get; set; }
         public int ItemId { get; set; }
     }
+
     public class FilterIsavilableReservayionDto: CreateReservationDto
     {
-
     }
+
     public class ReservationDto
     {
         public int Id { get; set; }
@@ -38,5 +80,4 @@
         public bool IsAvailable { get; set; } = true;
         public double TotalPrice { get; set; }
     }
-
 }

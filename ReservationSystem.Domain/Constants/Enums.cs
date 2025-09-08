@@ -20,11 +20,17 @@
             success = 3,
             Unauthorized = 4,
         }
-
         public enum AlartShow
         {
             note = 0,
             popup = 1
+        }
+
+        public enum Status
+        {
+            Pending = 1,
+            Confirmed = 2,
+            Cancelled = 3
         }
 
         public enum PermissionAction

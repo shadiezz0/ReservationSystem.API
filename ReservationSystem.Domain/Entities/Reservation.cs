@@ -1,4 +1,6 @@
-﻿namespace ReservationSystem.Domain.Entities
+﻿using static ReservationSystem.Domain.Constants.Enums;
+
+namespace ReservationSystem.Domain.Entities
 {
     public class Reservation
     {
@@ -9,7 +11,7 @@
         public TimeSpan EndTime { get; set; }
         public bool IsAvailable { get; set; } = true;
         public double TotalPrice { get; set; }
-        public string Status { get; set; } // "Pending", "Confirmed", "Cancelled"
+        public Status Status { get; set; } // "Pending", "Confirmed", "Cancelled"
         public int UserId { get; set; }
         public User User { get; set; }
 
@@ -21,4 +23,3 @@
 }
 // 1- time handle reservation for start and end 
 // 2- status turn to enums
-// 
