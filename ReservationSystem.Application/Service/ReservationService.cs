@@ -394,7 +394,7 @@ namespace ReservationSystem.Application.Service
             var reservations = await _reservation.FindAllAsync(
                 
             r => r.ReservationDate == dto.ReservationDate 
-                &&( (r.StartTime == dto.StartTime && r.EndTime == dto.EndTime ) || (dto.StartTime < r.EndTime && dto.EndTime > r.StartTime))
+                &&( (r.StartTime == dto.StartTime && r.EndTime == dto.EndTime ) || (dto.StartTime <= r.EndTime && dto.EndTime >= r.StartTime))
                 && r.IsAvailable == false && r.ItemId == dto.ItemId && r.Status != Status.Cancelled,
                 asNoTracking: true
             );
