@@ -141,12 +141,19 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> GetAllAsync()
         {
-            var items = await _Itemrepo.GetAllAsync(
+            var item = await _Itemrepo.GetAllAsync(
                 include: query => query.Include(i => i.ItemType),
                 asNoTracking: true
-            ); 
-            
-            
+            );
+
+            var items = item.Select(i => new ItemDto
+            {
+                Id = i.Id,
+                Name = i.Name,
+                ItemTypeName = i.ItemType.Name
+            }).ToList();
+
+
             if (items == null || !items.Any())
             {
                 return new ResponseResult
