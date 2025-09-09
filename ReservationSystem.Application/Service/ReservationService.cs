@@ -409,11 +409,11 @@ namespace ReservationSystem.Application.Service
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
             var reservations = await _reservation.FindAllAsync(
-                r => r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate ,
+                r => r.ReservationDate >= dto.FromDate && r.ReservationDate >= dto.ToDate ,
                 asNoTracking: true
             );
             var CheckIsavailable = reservations.Where(r => r.IsAvailable == false && r.ItemId == dto.ItemId);
-            if (reservations == null || !reservations.Any())
+            if (CheckIsavailable == null || !CheckIsavailable.Any())
                 return new ResponseResult
                 {
                     Result = Result.NoDataFound,
@@ -425,7 +425,7 @@ namespace ReservationSystem.Application.Service
                         MessageEn = "No reservations found in this date range.",
                     }
                 };
-            var result = reservations.Select(r => new ReservationDto
+            var result = CheckIsavailable.Select(r => new ReservationDto
             {
                 Id = r.Id,
                 ReservationDate = r.ReservationDate,
