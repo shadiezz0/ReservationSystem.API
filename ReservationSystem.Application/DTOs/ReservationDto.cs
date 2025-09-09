@@ -61,9 +61,32 @@ namespace ReservationSystem.Application.DTOs
 
     public class FilterReservationDto
     {
-        public DateTime FromDate { get; set; }
-        public DateTime ToDate { get; set; }
-        public int ItemId { get; set; }
+        // Date range filters
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
+        
+        // Exact date filter 
+        public DateTime? ReservationDate { get; set; }
+        
+        // Time filters
+        [JsonConverter(typeof(TimeSpanHoursMinutesJsonConverter))]
+        public TimeSpan? StartTime { get; set; }
+        
+        [JsonConverter(typeof(TimeSpanHoursMinutesJsonConverter))]
+        public TimeSpan? EndTime { get; set; }
+        
+        // Item filters
+        public int? ItemId { get; set; }
+        public int? ItemTypeId { get; set; }
+        
+        // Availability filter
+        public bool? IsAvailable { get; set; }
+        
+        // Status filter
+        public Status? Status { get; set; }
+        
+        // User filter (for admin to filter by specific user)
+        public int? UserId { get; set; }
     }
 
     public class FilterIsavilableReservayionDto: CreateReservationDto

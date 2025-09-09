@@ -1,8 +1,7 @@
-﻿
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using ReservationSystem.Domain.Entities;
 using System.Security.Claims;
+using System.Linq.Expressions;
 
 namespace ReservationSystem.Application.Service
 {
@@ -12,6 +11,7 @@ namespace ReservationSystem.Application.Service
         private readonly IGenericRepository<Item> _itemRepo;
         private readonly IUnitOfWork _uow;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        
         public ReservationService(IUnitOfWork uow, IHttpContextAccessor httpContextAccessor)
         {
             _reservation = uow.Repository<Reservation>();
@@ -20,8 +20,42 @@ namespace ReservationSystem.Application.Service
             _httpContextAccessor = httpContextAccessor;
         }
 
+        // Create Reservation
         public async Task<ResponseResult> CreateAsync(CreateReservationDto dto)
         {
+            // Validate end time is after start time
+            if (dto.EndTime <= dto.StartTime)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "وقت انتهاء الحجز يجب أن يكون بعد وقت البداية.",
+                        MessageEn = "End time must be after start time.",
+                    }
+                };
+            }
+
+            // Validate reservation is not in the past
+            var reservationDateTime = dto.ReservationDate.Add(dto.StartTime);
+            if (reservationDateTime <= DateTime.Now)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "لا يمكن إنشاء حجز في الماضي.",
+                        MessageEn = "Cannot create reservation in the past.",
+                    }
+                };
+            }
+
             var item = await _itemRepo.GetByIdAsync(dto.ItemId);
             if (item == null)
                 return new ResponseResult
@@ -35,6 +69,8 @@ namespace ReservationSystem.Application.Service
                         MessageEn = "Item not found.",
                     }
                 };
+
+            // Check availability (Double Booking Prevention)
             var CheckIsAvailable = await FilterByIsAvilableAsync(dto);
             if (!CheckIsAvailable)
             {
@@ -50,6 +86,7 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
+            
             var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var reservation = new Reservation
@@ -93,6 +130,7 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+        //  Delete Reservation
         public async Task<ResponseResult> DeleteAsync(int id)
         {
             var res = await _reservation.GetByIdAsync(id);
@@ -123,12 +161,29 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+        //  View All Reservations
         public async Task<ResponseResult> GetAllAsync()
         {
             var data = await _reservation.GetAllAsync(
                         include: q => q.Include(r => r.Item).Include(r => r.User),
                         asNoTracking: true
                     );
+            
+            if (!data.Any())
+            {
+                return new ResponseResult
+                {
+                    Result = Result.NoDataFound,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.note,
+                        MessageAr = "لا توجد حجوزات.",
+                        MessageEn = "No reservations found.",
+                    }
+                };
+            }
+
             var result = data.Select(r => new ReservationDto
             {
                 Id = r.Id,
@@ -140,10 +195,12 @@ namespace ReservationSystem.Application.Service
                 Status = r.Status,
                 TotalPrice = r.TotalPrice
             }).ToList();
+            
             return new ResponseResult
             {
                 Data = result,
                 Result = Result.Success,
+                TotalCount = result.Count,
                 Alart = new Alart
                 {
                     AlartType = AlartType.success,
@@ -154,6 +211,7 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+        // View Reservation Details
         public async Task<ResponseResult> GetByIdAsync(int id)
         {
             var res = await _reservation.GetByIdAsync(
@@ -199,9 +257,28 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+        // Update Reservation
         public async Task<ResponseResult> UpdateAsync(UpdateReservationDto dto)
         {
+            // Validate input data
+            var validationResult = ValidateReservationDto(dto);
+            if (validationResult != null)
+                return validationResult;
+
             var item = await _itemRepo.GetByIdAsync(dto.ItemId);
+            if (item == null)
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "العنصر غير موجود.",
+                        MessageEn = "Item not found.",
+                    }
+                };
+
             var res = await _reservation.GetByIdAsync(dto.Id);
             if (res == null)
                 return new ResponseResult
@@ -215,6 +292,41 @@ namespace ReservationSystem.Application.Service
                         MessageEn = "Reservation not found.",
                     }
                 };
+
+            // Check if date/time changed and validate availability
+            bool timeChanged = res.ReservationDate != dto.ReservationDate || 
+                              res.StartTime != dto.StartTime || 
+                              res.EndTime != dto.EndTime ||
+                              res.ItemId != dto.ItemId;
+            
+            if (timeChanged)
+            {
+                var createDto = new CreateReservationDto
+                {
+                    ReservationDate = dto.ReservationDate,
+                    StartTime = dto.StartTime,
+                    EndTime = dto.EndTime,
+                    ItemId = dto.ItemId,
+                    ItemTypeId = dto.ItemTypeId
+                };
+                
+                var isAvailable = await FilterByIsAvilableAsync(createDto);
+                if (!isAvailable)
+                {
+                    return new ResponseResult
+                    {
+                        Result = Result.NoDataFound,
+                        Alart = new Alart
+                        {
+                            AlartType = AlartType.warning,
+                            type = AlartShow.note,
+                            MessageAr = "الوقت المحدد غير متاح للحجز.",
+                            MessageEn = "The selected time slot is not available.",
+                        }
+                    };
+                }
+            }
+
             res.ReservationDate = dto.ReservationDate;
             res.StartTime = dto.StartTime;
             res.EndTime = dto.EndTime;
@@ -222,6 +334,7 @@ namespace ReservationSystem.Application.Service
             res.ItemTypeId = dto.ItemTypeId;
             res.ItemId = dto.ItemId;
             res.TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours;
+            
             _reservation.Update(res);
             var save = await _uow.SaveAsync();
             if (save)
@@ -251,10 +364,12 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+        // View Personal Reservations
         public async Task<ResponseResult> GetByUserIdAsync(int userId)
         {
             var reservations = await _reservation.FindAllAsync(
                         predicate: r => r.UserId == userId,
+                        include: q => q.Include(r => r.Item).Include(r => r.User),
                         asNoTracking: true
                     );
             if (reservations == null || !reservations.Any())
@@ -294,6 +409,7 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+        // Confirm Pending Reservation
         public async Task<ResponseResult> ConfirmReservationAsync(int id)
         {
             var res = await _reservation.GetByIdAsync(id);
@@ -338,9 +454,9 @@ namespace ReservationSystem.Application.Service
                     MessageEn = "Reservation confirmed successfully.",
                 }
             };
-
         }
 
+        // Cancel Reservation
         public async Task<ResponseResult> CancelReservationAsync(int id)
         {
             var res = await _reservation.GetByIdAsync(id);
@@ -371,6 +487,8 @@ namespace ReservationSystem.Application.Service
                 };
 
             res.Status = Status.Cancelled;
+            // Make time slot available again when cancelled
+            res.IsAvailable = true;
             _reservation.Update(res);
             await _uow.SaveAsync();
 
@@ -386,34 +504,54 @@ namespace ReservationSystem.Application.Service
                 }
             };
         }
+
+        // Check Item Availability  & Double Booking Prevention
         public async Task<bool> FilterByIsAvilableAsync(CreateReservationDto dto)
         {
-            //startTime = 1 ,endTime = 2
-            //startTime = 2 ,endTime = 4
-            //request : start=3 ,end=4
             var reservations = await _reservation.FindAllAsync(
-                
-            r => r.ReservationDate == dto.ReservationDate 
-                &&( (r.StartTime == dto.StartTime && r.EndTime == dto.EndTime ) || (dto.StartTime <= r.EndTime && dto.EndTime >= r.StartTime))
-                && r.IsAvailable == false && r.ItemId == dto.ItemId && r.Status != Status.Cancelled,
+                r => r.ReservationDate == dto.ReservationDate 
+                    && ((r.StartTime == dto.StartTime && r.EndTime == dto.EndTime) || 
+                        (dto.StartTime < r.EndTime && dto.EndTime > r.StartTime))
+                    && r.IsAvailable == false 
+                    && r.ItemId == dto.ItemId 
+                    && r.Status != Status.Cancelled,
                 asNoTracking: true
             );
-            if (reservations.Any())
-                return false;
-
-
-            return true;
-
-
+            
+            return !reservations.Any();
         }
+
+        // Filter Reservations by Date Range
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
-            var reservations = await _reservation.FindAllAsync(
-                r => r.ReservationDate >= dto.FromDate && r.ReservationDate >= dto.ToDate ,
+            // Start with all reservations and apply filters progressively
+            var allReservations = await _reservation.GetAllAsync(
+                include: q => q.Include(r => r.Item).Include(r => r.User),
                 asNoTracking: true
             );
-            var CheckIsavailable = reservations.Where(r => r.IsAvailable == false && r.ItemId == dto.ItemId);
-            if (CheckIsavailable == null || !CheckIsavailable.Any())
+
+            var filteredReservations = allReservations.AsEnumerable();
+
+            // Date filtering - support both range and exact date
+            if (dto.FromDate != default && dto.ToDate != default)
+            {
+                filteredReservations = filteredReservations.Where(r => 
+                    r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate);
+            }
+
+            // Item filtering
+            if (dto.ItemId > 0)
+            {
+                filteredReservations = filteredReservations.Where(r => r.ItemId == dto.ItemId);
+            }
+
+            // Additional filters can be added here based on enhanced FilterReservationDto
+            // Apply availability filter (only show unavailable reservations)
+            filteredReservations = filteredReservations.Where(r => r.IsAvailable == false);
+
+            var finalResults = filteredReservations.ToList();
+
+            if (!finalResults.Any())
                 return new ResponseResult
                 {
                     Result = Result.NoDataFound,
@@ -425,7 +563,8 @@ namespace ReservationSystem.Application.Service
                         MessageEn = "No reservations found in this date range.",
                     }
                 };
-            var result = CheckIsavailable.Select(r => new ReservationDto
+
+            var result = finalResults.Select(r => new ReservationDto
             {
                 Id = r.Id,
                 ReservationDate = r.ReservationDate,
@@ -436,11 +575,12 @@ namespace ReservationSystem.Application.Service
                 Status = r.Status,
                 TotalPrice = r.TotalPrice
             }).ToList();
+            
             return new ResponseResult
             {
                 Data = result,
                 Result = Result.Success,
-                TotalCount = result.Count(),
+                TotalCount = result.Count,
                 Alart = new Alart
                 {
                     AlartType = AlartType.success,
@@ -449,7 +589,156 @@ namespace ReservationSystem.Application.Service
                     MessageEn = "Reservations retrieved successfully.",
                 }
             };
+        }
 
+
+
+
+        // Enhanced Filter Reservations with comprehensive filtering options
+        public async Task<ResponseResult> FilterReservationsAsync(FilterReservationDto dto)
+        {
+            // Start with all reservations
+            var query = await _reservation.GetAllAsync(
+                include: q => q.Include(r => r.Item).Include(r => r.User),
+                asNoTracking: true
+            );
+
+            var filteredReservations = query.AsEnumerable();
+
+            // Apply date filtering
+            if (dto.FromDate.HasValue && dto.ToDate.HasValue)
+            {
+                filteredReservations = filteredReservations.Where(r => 
+                    r.ReservationDate >= dto.FromDate.Value && r.ReservationDate <= dto.ToDate.Value);
+            }
+            else if (dto.ReservationDate.HasValue)
+            {
+                var exactDate = dto.ReservationDate.Value.Date;
+                filteredReservations = filteredReservations.Where(r => r.ReservationDate.Date == exactDate);
+            }
+
+            // Apply item filters
+            if (dto.ItemId.HasValue && dto.ItemId.Value > 0)
+            {
+                filteredReservations = filteredReservations.Where(r => r.ItemId == dto.ItemId.Value);
+            }
+
+            if (dto.ItemTypeId.HasValue && dto.ItemTypeId.Value > 0)
+            {
+                filteredReservations = filteredReservations.Where(r => r.ItemTypeId == dto.ItemTypeId.Value);
+            }
+
+            // Apply time filters
+            if (dto.StartTime.HasValue)
+            {
+                filteredReservations = filteredReservations.Where(r => r.StartTime >= dto.StartTime.Value);
+            }
+
+            if (dto.EndTime.HasValue)
+            {
+                filteredReservations = filteredReservations.Where(r => r.EndTime <= dto.EndTime.Value);
+            }
+
+            // Apply availability filter
+            if (dto.IsAvailable.HasValue)
+            {
+                filteredReservations = filteredReservations.Where(r => r.IsAvailable == dto.IsAvailable.Value);
+            }
+
+            // Apply status filter
+            if (dto.Status.HasValue)
+            {
+                filteredReservations = filteredReservations.Where(r => r.Status == dto.Status.Value);
+            }
+
+            // Apply user filter
+            if (dto.UserId.HasValue && dto.UserId.Value > 0)
+            {
+                filteredReservations = filteredReservations.Where(r => r.UserId == dto.UserId.Value);
+            }
+
+            var finalResults = filteredReservations.ToList();
+
+            if (!finalResults.Any())
+                return new ResponseResult
+                {
+                    Result = Result.NoDataFound,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.note,
+                        MessageAr = "لا توجد حجوزات تطابق معايير البحث.",
+                        MessageEn = "No reservations found matching the search criteria.",
+                    }
+                };
+
+            var result = finalResults.Select(r => new ReservationDto
+            {
+                Id = r.Id,
+                ReservationDate = r.ReservationDate,
+                StartTime = r.StartTime,
+                EndTime = r.EndTime,
+                ItemName = r.Item.Name,
+                UserName = r.User.Name,
+                Status = r.Status,
+                IsAvailable = r.IsAvailable,
+                TotalPrice = r.TotalPrice
+            }).ToList();
+
+            return new ResponseResult
+            {
+                Data = result,
+                Result = Result.Success,
+                TotalCount = result.Count,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.success,
+                    type = AlartShow.note,
+                    MessageAr = "تم جلب الحجوزات بنجاح.",
+                    MessageEn = "Reservations retrieved successfully.",
+                }
+            };
+        }
+
+
+
+        // Helper method for validation
+        private ResponseResult ValidateReservationDto(CreateReservationDto dto)
+        {
+            // Validate end time is after start time
+            if (dto.EndTime <= dto.StartTime)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "وقت انتهاء الحجز يجب أن يكون بعد وقت البداية.",
+                        MessageEn = "End time must be after start time.",
+                    }
+                };
+            }
+
+            // Validate reservation is not in the past
+            var reservationDateTime = dto.ReservationDate.Add(dto.StartTime);
+            if (reservationDateTime <= DateTime.Now)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "لا يمكن إنشاء حجز في الماضي.",
+                        MessageEn = "Cannot create reservation in the past.",
+                    }
+                };
+            }
+
+            return null; 
         }
     }
 }
