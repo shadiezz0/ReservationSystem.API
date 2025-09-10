@@ -46,12 +46,13 @@ namespace ReservationSystem.API.Controllers
             return Ok(result);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(UpdateReservationDto dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(UpdateReservationDto dto,int id)
         {
             var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Reservations, PermissionAction.Edit);
             if (permissionResult != null)
                 return Ok(permissionResult);
+            dto.Id = id;
             var result = await _reservationService.UpdateAsync(dto);
             return Ok(result);
         }
@@ -87,9 +88,12 @@ namespace ReservationSystem.API.Controllers
             return Ok(result);
         }
 
-        [HttpPost("filter-by-date")]
-        public async Task<IActionResult> FilterByDate(FilterReservationDto dto)
+        [HttpGet("filter-by-date")]
+        public async Task<IActionResult> FilterByDate([FromBody] FilterReservationDto dto)
         {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Reservations, PermissionAction.Show);
+            if (permissionResult != null)
+                return Ok(permissionResult);
             var result = await _reservationService.FilterByDateAsync(dto);
             return Ok(result);
         }

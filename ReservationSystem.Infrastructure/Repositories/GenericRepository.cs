@@ -54,9 +54,9 @@ namespace ReservationSystem.Infrastructure.Repositories
         }
 
 
-        public IQueryable<T> AsNoTracking()
+        public  IQueryable<T> AsNoTracking()
         {
-            return _dbSet.AsNoTracking();
+            return  _dbSet.AsNoTracking();
         }
 
         public async Task<IEnumerable<T>> FindAllAsync(

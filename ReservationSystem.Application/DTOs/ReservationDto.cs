@@ -55,8 +55,8 @@ namespace ReservationSystem.Application.DTOs
 
     public class UpdateReservationDto: CreateReservationDto
     {
+        [JsonIgnore]
         public int Id { get; set; }
-        public Status Status { get; set; } //Pending 1 / Confirmed 2 / Cancelled 3
     }
 
     public class FilterReservationDto
@@ -81,15 +81,16 @@ namespace ReservationSystem.Application.DTOs
         // Item filters
         public int ItemId { get; set; } = 0;
         public int ItemTypeId { get; set; } = 0;
-        
+
         // Availability filter
-        public bool? IsAvailable { get; set; }
-        
+        [DefaultValue("false")]
+        public bool IsAvailable { get; set; } = false;
+
         // Status filter
-        public Status? Status { get; set; }
+        public Status Status { get; set; } = 0;
         
         // User filter (for admin to filter by specific user)
-        public int? UserId { get; set; }
+        //public int? UserId { get; set; }
     }
 
     public class FilterIsavilableReservayionDto: CreateReservationDto
