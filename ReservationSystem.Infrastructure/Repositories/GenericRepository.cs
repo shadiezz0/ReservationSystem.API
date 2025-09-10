@@ -53,6 +53,12 @@ namespace ReservationSystem.Infrastructure.Repositories
             return await query.ToListAsync();
         }
 
+
+        public IQueryable<T> AsNoTracking()
+        {
+            return _dbSet.AsNoTracking();
+        }
+
         public async Task<IEnumerable<T>> FindAllAsync(
             Expression<Func<T, bool>> predicate,
             Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Linq.Expressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ReservationSystem.Application.Service
 {
@@ -522,140 +523,127 @@ namespace ReservationSystem.Application.Service
         }
 
         // Filter Reservations by Date Range
-        public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
-        {
-            // Start with all reservations and apply filters progressively
-            var allReservations = await _reservation.GetAllAsync(
-                include: q => q.Include(r => r.Item).Include(r => r.User),
-                asNoTracking: true
-            );
+        //public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
+        //{
+        //    // Start with all reservations and apply filters progressively
+        //    var filteredReservations = await _reservation.GetAllAsync(
+        //        include: q => q.Include(r => r.Item).Include(r => r.User),
+        //        asNoTracking: true
+        //    );
 
-            var filteredReservations = allReservations.AsEnumerable();
+          
+        //    // Date filtering - support both range and exact date
+        //    if (dto.FromDate != default && dto.ToDate != default)
+        //    {
+        //        filteredReservations = filteredReservations.Where(r => 
+        //            r.ReservationDate <= dto.FromDate && r.ReservationDate >= dto.ToDate);
+        //    }
 
-            // Date filtering - support both range and exact date
-            if (dto.FromDate != default && dto.ToDate != default)
-            {
-                filteredReservations = filteredReservations.Where(r => 
-                    r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate);
-            }
+        //    // Item filtering
+        //    if (dto.ItemId > 0)
+        //    {
+        //        filteredReservations = filteredReservations.Where(r => r.ItemId == dto.ItemId);
+        //    }
 
-            // Item filtering
-            if (dto.ItemId > 0)
-            {
-                filteredReservations = filteredReservations.Where(r => r.ItemId == dto.ItemId);
-            }
+        //    // Additional filters can be added here based on enhanced FilterReservationDto
+        //    // Apply availability filter (only show unavailable reservations)
+        //    filteredReservations = filteredReservations.Where(r => r.IsAvailable == false);
 
-            // Additional filters can be added here based on enhanced FilterReservationDto
-            // Apply availability filter (only show unavailable reservations)
-            filteredReservations = filteredReservations.Where(r => r.IsAvailable == false);
+        //    var finalResults = filteredReservations.ToList();
 
-            var finalResults = filteredReservations.ToList();
+        //    if (!finalResults.Any())
+        //        return new ResponseResult
+        //        {
+        //            Result = Result.NoDataFound,
+        //            Alart = new Alart
+        //            {
+        //                AlartType = AlartType.warning,
+        //                type = AlartShow.note,
+        //                MessageAr = "لا توجد حجوزات في هذا النطاق الزمني.",
+        //                MessageEn = "No reservations found in this date range.",
+        //            }
+        //        };
 
-            if (!finalResults.Any())
-                return new ResponseResult
-                {
-                    Result = Result.NoDataFound,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.warning,
-                        type = AlartShow.note,
-                        MessageAr = "لا توجد حجوزات في هذا النطاق الزمني.",
-                        MessageEn = "No reservations found in this date range.",
-                    }
-                };
-
-            var result = finalResults.Select(r => new ReservationDto
-            {
-                Id = r.Id,
-                ReservationDate = r.ReservationDate,
-                StartTime = r.StartTime,
-                EndTime = r.EndTime,
-                ItemName = r.Item.Name,
-                UserName = r.User.Name,
-                Status = r.Status,
-                TotalPrice = r.TotalPrice
-            }).ToList();
+        //    var result = finalResults.Select(r => new ReservationDto
+        //    {
+        //        Id = r.Id,
+        //        ReservationDate = r.ReservationDate,
+        //        StartTime = r.StartTime,
+        //        EndTime = r.EndTime,
+        //        ItemName = r.Item.Name,
+        //        UserName = r.User.Name,
+        //        Status = r.Status,
+        //        TotalPrice = r.TotalPrice
+        //    }).ToList();
             
-            return new ResponseResult
-            {
-                Data = result,
-                Result = Result.Success,
-                TotalCount = result.Count,
-                Alart = new Alart
-                {
-                    AlartType = AlartType.success,
-                    type = AlartShow.note,
-                    MessageAr = "تم جلب الحجوزات بنجاح.",
-                    MessageEn = "Reservations retrieved successfully.",
-                }
-            };
-        }
+        //    return new ResponseResult
+        //    {
+        //        Data = result,
+        //        Result = Result.Success,
+        //        TotalCount = result.Count,
+        //        Alart = new Alart
+        //        {
+        //            AlartType = AlartType.success,
+        //            type = AlartShow.note,
+        //            MessageAr = "تم جلب الحجوزات بنجاح.",
+        //            MessageEn = "Reservations retrieved successfully.",
+        //        }
+        //    };
+        //}
 
 
 
 
         // Enhanced Filter Reservations with comprehensive filtering options
-        public async Task<ResponseResult> FilterReservationsAsync(FilterReservationDto dto)
+        public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
             // Start with all reservations
-            var query = await _reservation.GetAllAsync(
+            var Query = await _reservation.GetAllAsync(
                 include: q => q.Include(r => r.Item).Include(r => r.User),
                 asNoTracking: true
             );
-
-            var filteredReservations = query.AsEnumerable();
+            var filteredReservations = Query.AsQueryable();
 
             // Apply date filtering
-            if (dto.FromDate.HasValue && dto.ToDate.HasValue)
+            // Date filtering
+            if (dto.FromDate != default && dto.ToDate != default)
             {
-                filteredReservations = filteredReservations.Where(r => 
-                    r.ReservationDate >= dto.FromDate.Value && r.ReservationDate <= dto.ToDate.Value);
+                filteredReservations = filteredReservations.Where(r => r.ReservationDate >= dto.FromDate && r.ReservationDate <= dto.ToDate);
             }
-            else if (dto.ReservationDate.HasValue)
+            else if (dto.FromDate != default)
             {
-                var exactDate = dto.ReservationDate.Value.Date;
-                filteredReservations = filteredReservations.Where(r => r.ReservationDate.Date == exactDate);
+                filteredReservations = filteredReservations.Where(r => r.ReservationDate >= dto.FromDate);
             }
-
-            // Apply item filters
-            if (dto.ItemId.HasValue && dto.ItemId.Value > 0)
+            else if (dto.ToDate != default)
             {
-                filteredReservations = filteredReservations.Where(r => r.ItemId == dto.ItemId.Value);
+                filteredReservations = filteredReservations.Where(r => r.ReservationDate <= dto.ToDate);
             }
 
-            if (dto.ItemTypeId.HasValue && dto.ItemTypeId.Value > 0)
-            {
-                filteredReservations = filteredReservations.Where(r => r.ItemTypeId == dto.ItemTypeId.Value);
-            }
+            // Item filters
+            if (dto.ItemId > 0)
+                filteredReservations = filteredReservations.Where(r => r.ItemId == dto.ItemId);
 
-            // Apply time filters
+            if (dto.ItemTypeId > 0)
+                filteredReservations = filteredReservations.Where(r => r.ItemTypeId == dto.ItemTypeId);
+
+            // Time filters
             if (dto.StartTime.HasValue)
-            {
                 filteredReservations = filteredReservations.Where(r => r.StartTime >= dto.StartTime.Value);
-            }
 
             if (dto.EndTime.HasValue)
-            {
                 filteredReservations = filteredReservations.Where(r => r.EndTime <= dto.EndTime.Value);
-            }
 
-            // Apply availability filter
+            // Availability
             if (dto.IsAvailable.HasValue)
-            {
                 filteredReservations = filteredReservations.Where(r => r.IsAvailable == dto.IsAvailable.Value);
-            }
 
-            // Apply status filter
+            // Status
             if (dto.Status.HasValue)
-            {
                 filteredReservations = filteredReservations.Where(r => r.Status == dto.Status.Value);
-            }
 
-            // Apply user filter
+            // User
             if (dto.UserId.HasValue && dto.UserId.Value > 0)
-            {
                 filteredReservations = filteredReservations.Where(r => r.UserId == dto.UserId.Value);
-            }
 
             var finalResults = filteredReservations.ToList();
 

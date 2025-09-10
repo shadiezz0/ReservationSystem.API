@@ -62,22 +62,25 @@ namespace ReservationSystem.Application.DTOs
     public class FilterReservationDto
     {
         // Date range filters
-        public DateTime? FromDate { get; set; }
-        public DateTime? ToDate { get; set; }
-        
-        // Exact date filter 
-        public DateTime? ReservationDate { get; set; }
-        
+        public DateTime FromDate { get; set; } = DateTime.Now;
+        public DateTime ToDate { get; set; } = DateTime.UtcNow;
+
+
         // Time filters
         [JsonConverter(typeof(TimeSpanHoursMinutesJsonConverter))]
+        [DefaultValue("09:00")] // Shown in Swagger
+        [Display(Name = "Start Time (HH:mm)", Description = "Time in 24h format HH:mm")]
         public TimeSpan? StartTime { get; set; }
-        
+
+        // Show default in Swagger as HH:mm and serialize as "HH:mm"
         [JsonConverter(typeof(TimeSpanHoursMinutesJsonConverter))]
+        [DefaultValue("10:00")] // Swagger default (1 hour after sample StartTime)
+        [Display(Name = "End Time (HH:mm)", Description = "Time in 24h format HH:mm (must be after StartTime)")]
         public TimeSpan? EndTime { get; set; }
-        
+
         // Item filters
-        public int? ItemId { get; set; }
-        public int? ItemTypeId { get; set; }
+        public int ItemId { get; set; } = 0;
+        public int ItemTypeId { get; set; } = 0;
         
         // Availability filter
         public bool? IsAvailable { get; set; }

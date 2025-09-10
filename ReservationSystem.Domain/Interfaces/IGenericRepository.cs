@@ -1,10 +1,12 @@
 ﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 
 namespace ReservationSystem.Domain.Interfaces
 {
     public interface IGenericRepository<T> where T : class
     {
+      
         Task<T?> GetByIdAsync(
            int id,
            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
@@ -16,7 +18,8 @@ namespace ReservationSystem.Domain.Interfaces
            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
            bool asNoTracking = false
        );
-
+        IQueryable<T> AsNoTracking();
+       
         Task<IEnumerable<T>> FindAllAsync(
             Expression<Func<T, bool>> predicate,
             Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
