@@ -26,7 +26,7 @@ namespace ReservationSystem.Application.Service
 
 
             var item = await _itemRepo.GetByIdAsync(dto.ItemId);
-            if (item == null || item.ItemTypeId != dto.ItemTypeId)
+            if (item == null || item.ItemTypeId == 0)
                return ResponseHelper.Warning("العنصر غير موجود.", "Item not found.");
 
             var userId = ResponseHelper.GetCurrentUserId();
@@ -42,7 +42,7 @@ namespace ReservationSystem.Application.Service
                 Status = Status.Pending,
                 //TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours, 
                 TotalPrice = ReservationHelper.CalculateTotalPrice(item.PricePerHour, dto.StartTime, dto.EndTime),
-                ItemTypeId =dto.ItemTypeId
+                ItemTypeId = item.ItemTypeId
             };
             await _reservation.AddAsync(reservation);
             var save = await _uow.SaveAsync();
@@ -229,9 +229,11 @@ namespace ReservationSystem.Application.Service
         //Filter By Date
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
+            //var userId = ResponseHelper.GetCurrentUserId();
+
             // Start with all reservations
-            var filteredReservations =  _reservation.AsNoTracking().Include(a=>a.Item)
-                .Include(r => r.User).AsQueryable();
+            var filteredReservations =  _reservation.AsNoTracking()/*.Where(a=>a.UserId == userId)*/.Include(a=>a.Item)
+               .AsQueryable();
             
             // Date filtering
             if (dto.FromDate != default && dto.ToDate != default)

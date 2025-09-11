@@ -5,10 +5,13 @@ namespace ReservationSystem.Application.Comman.Helpers
 {
     public static class ResponseHelper
     {
-        private static IHttpContextAccessor? _httpContextAccessor;
+        private static IHttpContextAccessor _httpContextAccessor;
 
-
-        public static ResponseResult CreateResponse(
+        public static void Initialize(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
+            public static ResponseResult CreateResponse(
             Result result,
             AlartType alartType,
             string messageAr,

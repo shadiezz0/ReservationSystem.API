@@ -49,6 +49,7 @@ namespace ReservationSystem.Application.DTOs
         public bool IsAvailable { get; set; }
 
         public int ItemId { get; set; }
+        [JsonIgnore]
         public int ItemTypeId { get; set; }
 
     }
@@ -88,9 +89,10 @@ namespace ReservationSystem.Application.DTOs
 
         // Status filter
         public Status Status { get; set; } = 0;
-        
+
         // User filter (for admin to filter by specific user)
-        //public int? UserId { get; set; }
+        [JsonIgnore]
+        public int UserId { get; set; }
     }
 
     public class FilterIsavilableReservayionDto: CreateReservationDto
