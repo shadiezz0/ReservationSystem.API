@@ -88,7 +88,7 @@ namespace ReservationSystem.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("filter-by-date")]
+        [HttpPost("filter-by-date")]
         public async Task<IActionResult> FilterByDate([FromBody] FilterReservationDto dto)
         {
             var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Reservations, PermissionAction.Show);

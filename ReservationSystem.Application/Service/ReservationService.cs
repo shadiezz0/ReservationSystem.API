@@ -1,4 +1,6 @@
-﻿using System.Security.Claims;
+﻿using Microsoft.EntityFrameworkCore;
+using ReservationSystem.Application.Comman.Helpers;
+using System.Security.Claims;
 
 namespace ReservationSystem.Application.Service
 {
@@ -27,7 +29,7 @@ namespace ReservationSystem.Application.Service
             if (item == null || item.ItemTypeId != dto.ItemTypeId)
                return ResponseHelper.Warning("العنصر غير موجود.", "Item not found.");
 
-            var userIdString = ResponseHelper.GetCurrentUserId;
+            var userId = ResponseHelper.GetCurrentUserId();
 
             var reservation = new Reservation
             {
@@ -35,7 +37,7 @@ namespace ReservationSystem.Application.Service
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
                 ItemId = dto.ItemId,
-                UserId = int.Parse(userIdString),
+                UserId = userId,
                 IsAvailable = false,
                 Status = Status.Pending,
                 //TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours, 
