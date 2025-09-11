@@ -1,13 +1,14 @@
-﻿using ReservationSystem.Infrastructure;
-using ReservationSystem.Application;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System;
+using ReservationSystem.Application;
+using ReservationSystem.Application.Comman.Helpers;
 using ReservationSystem.Domain.Entities;
+using ReservationSystem.Infrastructure;
 using ReservationSystem.Infrastructure.Seeding;
+using System;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +86,13 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+
+// Initialize ResponseHelper with HttpContextAccessor
+using (var scope = app.Services.CreateScope())
+{
+    var httpContextAccessor = scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
+    ResponseHelper.Initialize(httpContextAccessor);
+}
 
 // Auto-seed 
 using (var scope = app.Services.CreateScope())
