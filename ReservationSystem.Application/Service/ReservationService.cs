@@ -192,10 +192,10 @@
         //Filter By Date
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
-            //var userId = ResponseHelper.GetCurrentUserId();
+            var userId = ResponseHelper.GetCurrentUserId();
 
             // Start with all reservations
-            var filteredReservations =  _reservation.AsNoTracking()/*.Where(a=>a.UserId == userId)*/.Include(a=>a.Item)
+            var filteredReservations =  _reservation.AsNoTracking().Where(a=>a.UserId == userId).Include(a=>a.Item)
                .AsQueryable();
             
             // Date filtering
