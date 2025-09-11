@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using System.Linq.Expressions;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using ReservationSystem.Application.Comman.Helpers;
+﻿using System.Security.Claims;
 
 namespace ReservationSystem.Application.Service
 {
@@ -12,14 +7,12 @@ namespace ReservationSystem.Application.Service
         private readonly IGenericRepository<Reservation> _reservation;
         private readonly IGenericRepository<Item> _itemRepo;
         private readonly IUnitOfWork _uow;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         
-        public ReservationService(IUnitOfWork uow, IHttpContextAccessor httpContextAccessor)
+        public ReservationService(IUnitOfWork uow)
         {
             _reservation = uow.Repository<Reservation>();
             _itemRepo = uow.Repository<Item>();
             _uow = uow;
-            _httpContextAccessor = httpContextAccessor;
         }
 
         // Create Reservation
@@ -34,7 +27,7 @@ namespace ReservationSystem.Application.Service
             if (item == null || item.ItemTypeId != dto.ItemTypeId)
                return ResponseHelper.Warning("العنصر غير موجود.", "Item not found.");
 
-            var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdString = ResponseHelper.GetCurrentUserId;
 
             var reservation = new Reservation
             {
@@ -45,7 +38,8 @@ namespace ReservationSystem.Application.Service
                 UserId = int.Parse(userIdString),
                 IsAvailable = false,
                 Status = Status.Pending,
-                TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours, // Assuming TotalPrice is calculated based on hours
+                //TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours, 
+                TotalPrice = ReservationHelper.CalculateTotalPrice(item.PricePerHour, dto.StartTime, dto.EndTime),
                 ItemTypeId =dto.ItemTypeId
             };
             await _reservation.AddAsync(reservation);
@@ -82,18 +76,20 @@ namespace ReservationSystem.Application.Service
                 return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
             }
 
-            var result = data.Select(r => new ReservationDto
-            {
-                Id = r.Id,
-                ReservationDate = r.ReservationDate,
-                StartTime = r.StartTime,
-                EndTime = r.EndTime,
-                ItemName = r.Item.Name,
-                UserName = r.User.Name,
-                Status = r.Status,
-                TotalPrice = r.TotalPrice
-            }).ToList();
-            
+            //var result = data.Select(r => new ReservationDto
+            //{
+            //    Id = r.Id,
+            //    ReservationDate = r.ReservationDate,
+            //    StartTime = r.StartTime,
+            //    EndTime = r.EndTime,
+            //    ItemName = r.Item.Name,
+            //    UserName = r.User.Name,
+            //    Status = r.Status,
+            //    TotalPrice = r.TotalPrice
+            //}).ToList();
+            var result = ReservationHelper.MapToReservationDtoList(data);
+
+
             return ResponseHelper.Success("تم جلب جميع الحجوزات بنجاح.", "All reservations retrieved successfully.");
         }
 
@@ -108,18 +104,19 @@ namespace ReservationSystem.Application.Service
 
             if (res == null)
               return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
-            var result = new ReservationDto
-            {
-                Id = res.Id,
-                ReservationDate = res.ReservationDate,
-                StartTime = res.StartTime,
-                EndTime = res.EndTime,
-                ItemName = res.Item.Name,
-                UserName = res.User.Name,
-                Status = res.Status,
-                TotalPrice = res.TotalPrice
-            };
-;
+            //var result = new ReservationDto
+            //{
+            //    Id = res.Id,
+            //    ReservationDate = res.ReservationDate,
+            //    StartTime = res.StartTime,
+            //    EndTime = res.EndTime,
+            //    ItemName = res.Item.Name,
+            //    UserName = res.User.Name,
+            //    Status = res.Status,
+            //    TotalPrice = res.TotalPrice
+            //};
+            var result = ReservationHelper.MapToReservationDto(res);
+
             return ResponseHelper.Success("تم جلب تفاصيل الحجز بنجاح.", "Reservation details retrieved successfully.");
         }
 
@@ -145,7 +142,8 @@ namespace ReservationSystem.Application.Service
             res.EndTime = dto.EndTime;
             res.ItemTypeId = dto.ItemTypeId;
             res.ItemId = dto.ItemId;
-            res.TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours;
+            //res.TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours;
+            res.TotalPrice = ReservationHelper.CalculateTotalPrice(item.PricePerHour, dto.StartTime, dto.EndTime);
             
             _reservation.Update(res);
             var save = await _uow.SaveAsync();
@@ -170,17 +168,19 @@ namespace ReservationSystem.Application.Service
             if (reservations == null || !reservations.Any())
             return ResponseHelper.Failed("لا توجد حجوزات لهذا المستخدم.", "No reservations found for this user.");
 
-            var result = reservations.Select(r => new ReservationDto
-            {
-                Id = r.Id,
-                ReservationDate = r.ReservationDate,
-                StartTime = r.StartTime,
-                EndTime = r.EndTime,
-                ItemName = r.Item.Name,
-                UserName = r.User.Name,
-                Status = r.Status,
-                TotalPrice = r.TotalPrice
-            }).ToList();
+            //var result = reservations.Select(r => new ReservationDto
+            //{
+            //    Id = r.Id,
+            //    ReservationDate = r.ReservationDate,
+            //    StartTime = r.StartTime,
+            //    EndTime = r.EndTime,
+            //    ItemName = r.Item.Name,
+            //    UserName = r.User.Name,
+            //    Status = r.Status,
+            //    TotalPrice = r.TotalPrice
+            //}).ToList();
+
+            var result = ReservationHelper.MapToReservationDtoList(reservations);
 
             return ResponseHelper.Success("تم جلب حجوزات المستخدم بنجاح.", "User reservations retrieved successfully.");
 
@@ -202,7 +202,6 @@ namespace ReservationSystem.Application.Service
             await _uow.SaveAsync();
 
             return ResponseHelper.Success("تم تأكيد الحجز بنجاح.", "Reservation confirmed successfully.");
-
         }
 
         // Cancel Reservation
@@ -210,60 +209,28 @@ namespace ReservationSystem.Application.Service
         {
             var res = await _reservation.GetByIdAsync(id);
             if (res == null)
-                return new ResponseResult
-                {
-                    Result = Result.Failed,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.error,
-                        type = AlartShow.note,
-                        MessageAr = "الحجز غير موجود.",
-                        MessageEn = "Reservation not found.",
-                    }
-                };
+            return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
 
             if (res.Status == Status.Cancelled)
-                return new ResponseResult
-                {
-                    Result = Result.Failed,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.warning,
-                        type = AlartShow.note,
-                        MessageAr = "هذا الحجز تم إلغاءه بالفعل.",
-                        MessageEn = "This reservation has already been cancelled.",
-                    }
-                };
+            return ResponseHelper.Warning("لا يمكن إلغاء الحجز بعد تأكيده.",
+                "Cannot cancel reservation after it has been confirmed.");
 
             res.Status = Status.Cancelled;
-            // Make time slot available again when cancelled
             res.IsAvailable = true;
+
             _reservation.Update(res);
             await _uow.SaveAsync();
 
-            return new ResponseResult
-            {
-                Result = Result.Success,
-                Alart = new Alart
-                {
-                    AlartType = AlartType.success,
-                    type = AlartShow.note,
-                    MessageAr = "تم إلغاء الحجز بنجاح.",
-                    MessageEn = "Reservation cancelled successfully.",
-                }
-            };
+            return ResponseHelper.Success("تم إلغاء الحجز بنجاح.", "Reservation cancelled successfully.");
         }
 
         //Filter By Date
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
             // Start with all reservations
-            
             var filteredReservations =  _reservation.AsNoTracking().Include(a=>a.Item)
                 .Include(r => r.User).AsQueryable();
             
-
-            // Apply date filtering
             // Date filtering
             if (dto.FromDate != default && dto.ToDate != default)
             {
@@ -301,7 +268,6 @@ namespace ReservationSystem.Application.Service
             //    filteredReservations = filteredReservations.Where(r => r.UserId == dto.UserId.Value);
            
             // Availability
-
             filteredReservations = filteredReservations.Where(r => r.IsAvailable == dto.IsAvailable);
 
             var finalResults = filteredReservations.ToList();
@@ -309,20 +275,20 @@ namespace ReservationSystem.Application.Service
             if (!finalResults.Any())
                     return ResponseHelper.Warning("لا توجد حجوزات تطابق معايير البحث.", "No reservations found matching the search criteria.");
 
-        
 
-            var result = finalResults.Select(r => new ReservationDto
-            {
-                Id = r.Id,
-                ReservationDate = r.ReservationDate,
-                StartTime = r.StartTime,
-                EndTime = r.EndTime,
-                ItemName = r.Item.Name,
-                UserName = r.User.Name,
-                Status = r.Status,
-                IsAvailable = r.IsAvailable,
-                TotalPrice = r.TotalPrice
-            }).ToList();
+            //var result = finalResults.Select(r => new ReservationDto
+            //{
+            //    Id = r.Id,
+            //    ReservationDate = r.ReservationDate,
+            //    StartTime = r.StartTime,
+            //    EndTime = r.EndTime,
+            //    ItemName = r.Item.Name,
+            //    UserName = r.User.Name,
+            //    Status = r.Status,
+            //    IsAvailable = r.IsAvailable,
+            //    TotalPrice = r.TotalPrice
+            //}).ToList();
+            var reslut = ReservationHelper.MapToReservationDtoList(finalResults);
 
             return ResponseHelper.Success("تم جلب الحجوزات بنجاح.", "Reservations retrieved successfully.");
 
@@ -342,7 +308,8 @@ namespace ReservationSystem.Application.Service
 
              if (reservations.Any())
                 return ResponseHelper.Warning("الحجز غير متاح حالياً", "Reservation is Currently not available.");
-            // Validate end time is after start time
+            
+             // Validate end time is after start time
             if (dto.EndTime <= dto.StartTime)
             {
                 return ResponseHelper.Failed("وقت انتهاء الحجز يجب أن يكون بعد وقت البداية.",

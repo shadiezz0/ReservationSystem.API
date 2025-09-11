@@ -1,40 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace ReservationSystem.Application.Comman.Helpers
 {
-        public static class ResponseHelper 
+    public static class ResponseHelper
     {
-            public static ResponseResult CreateResponse(
-                Result result,
-                AlartType alartType,
-                string messageAr,
-                string messageEn,
-                AlartShow alartShow = AlartShow.note)
+        private static IHttpContextAccessor? _httpContextAccessor;
+
+
+        public static ResponseResult CreateResponse(
+            Result result,
+            AlartType alartType,
+            string messageAr,
+            string messageEn,
+            AlartShow alartShow = AlartShow.note)
+        {
+            return new ResponseResult
             {
-                return new ResponseResult
+                Result = result,
+                Alart = new Alart
                 {
-                    Result = result,
-                    Alart = new Alart
-                    {
-                        AlartType = alartType,
-                        type = alartShow,
-                        MessageAr = messageAr,
-                        MessageEn = messageEn
-                    }
-                };
+                    AlartType = alartType,
+                    type = alartShow,
+                    MessageAr = messageAr,
+                    MessageEn = messageEn
+                }
+            };
+        }
+
+        public static ResponseResult Success(string messageAr, string messageEn) =>
+            CreateResponse(Result.Success, AlartType.success, messageAr, messageEn);
+
+        public static ResponseResult Failed(string messageAr, string messageEn) =>
+            CreateResponse(Result.Failed, AlartType.error, messageAr, messageEn);
+
+        public static ResponseResult Warning(string messageAr, string messageEn) =>
+            CreateResponse(Result.NoDataFound, AlartType.warning, messageAr, messageEn);
+
+        public static int GetCurrentUserId()
+        {
+            if (_httpContextAccessor == null)
+            {
+                throw new InvalidOperationException("HttpContextAccessor is not initialized. Call ResponseHelper.Initialize() during startup.");
             }
 
-            public static ResponseResult Success(string messageAr, string messageEn) =>
-                CreateResponse(Result.Success, AlartType.success, messageAr, messageEn);
+            var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            public static ResponseResult Failed(string messageAr, string messageEn) =>
-                CreateResponse(Result.Failed, AlartType.error, messageAr, messageEn);
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            {
+                throw new UnauthorizedAccessException("User not authenticated or invalid user ID.");
+            }
 
-            public static ResponseResult Warning(string messageAr, string messageEn) =>
-                CreateResponse(Result.NoDataFound, AlartType.warning, messageAr, messageEn);
+            return userId;
         }
+    }
 }

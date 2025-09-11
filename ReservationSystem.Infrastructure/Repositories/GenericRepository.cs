@@ -29,8 +29,6 @@ namespace ReservationSystem.Infrastructure.Repositories
             if (asNoTracking)
                 query = query.AsNoTracking();
 
-            // FindAsync works only on key lookup with EF tracking.
-            // We must fallback to FirstOrDefault with condition if include/asNoTracking is involved.
             return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
         }
 
