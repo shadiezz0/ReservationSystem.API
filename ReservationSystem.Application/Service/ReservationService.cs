@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ReservationSystem.Application.Comman.Helpers;
-using System.Security.Claims;
-
-namespace ReservationSystem.Application.Service
+﻿namespace ReservationSystem.Application.Service
 {
     public class ReservationService : IReservationService
     {
@@ -20,7 +16,7 @@ namespace ReservationSystem.Application.Service
         // Create Reservation
         public async Task<ResponseResult> CreateAsync(CreateReservationDto dto)
         {
-            var validationResult = await ValidateReservationDto(dto);
+            var validationResult = await ReservationHelper.ValidateReservationDto(dto, _reservation);
             if (validationResult != null)
                 return validationResult;
 
@@ -40,7 +36,6 @@ namespace ReservationSystem.Application.Service
                 UserId = userId,
                 IsAvailable = false,
                 Status = Status.Pending,
-                //TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours, 
                 TotalPrice = ReservationHelper.CalculateTotalPrice(item.PricePerHour, dto.StartTime, dto.EndTime),
                 ItemTypeId = item.ItemTypeId
             };
@@ -53,6 +48,7 @@ namespace ReservationSystem.Application.Service
             return ResponseHelper.Failed("لم يتم إنشاء الحجز بنجاح.", "Reservation Not created successfully.");
         }
 
+
         //  Delete Reservation
         public async Task<ResponseResult> DeleteAsync(int id)
         {
@@ -64,6 +60,7 @@ namespace ReservationSystem.Application.Service
 
             return ResponseHelper.Success("تم حذف الحجز بنجاح.", "Reservation deleted successfully.");
         }
+
 
         //  View All Reservations
         public async Task<ResponseResult> GetAllAsync()
@@ -78,22 +75,11 @@ namespace ReservationSystem.Application.Service
                 return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
             }
 
-            //var result = data.Select(r => new ReservationDto
-            //{
-            //    Id = r.Id,
-            //    ReservationDate = r.ReservationDate,
-            //    StartTime = r.StartTime,
-            //    EndTime = r.EndTime,
-            //    ItemName = r.Item.Name,
-            //    UserName = r.User.Name,
-            //    Status = r.Status,
-            //    TotalPrice = r.TotalPrice
-            //}).ToList();
             var result = ReservationHelper.MapToReservationDtoList(data);
-
 
             return ResponseHelper.Success("تم جلب جميع الحجوزات بنجاح.", "All reservations retrieved successfully.");
         }
+
 
         // View Reservation Details
         public async Task<ResponseResult> GetByIdAsync(int id)
@@ -106,27 +92,17 @@ namespace ReservationSystem.Application.Service
 
             if (res == null)
               return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
-            //var result = new ReservationDto
-            //{
-            //    Id = res.Id,
-            //    ReservationDate = res.ReservationDate,
-            //    StartTime = res.StartTime,
-            //    EndTime = res.EndTime,
-            //    ItemName = res.Item.Name,
-            //    UserName = res.User.Name,
-            //    Status = res.Status,
-            //    TotalPrice = res.TotalPrice
-            //};
-            var result = ReservationHelper.MapToReservationDto(res);
 
-            return ResponseHelper.Success("تم جلب تفاصيل الحجز بنجاح.", "Reservation details retrieved successfully.");
+            var result = ReservationHelper.MapToReservationDto(res);
+                return ResponseHelper.Success("تم جلب تفاصيل الحجز بنجاح.", "Reservation details retrieved successfully.");
         }
+
 
         // Update Reservation
         public async Task<ResponseResult> UpdateAsync(UpdateReservationDto dto)
         {
             // Validate input data
-            var validationResult = await ValidateReservationDto(dto);
+            var validationResult = await ReservationHelper.ValidateReservationDto(dto , _reservation);
             if (validationResult != null)
                 return validationResult;
 
@@ -144,20 +120,17 @@ namespace ReservationSystem.Application.Service
             res.EndTime = dto.EndTime;
             res.ItemTypeId = dto.ItemTypeId;
             res.ItemId = dto.ItemId;
-            //res.TotalPrice = item.PricePerHour * (dto.EndTime - dto.StartTime).TotalHours;
             res.TotalPrice = ReservationHelper.CalculateTotalPrice(item.PricePerHour, dto.StartTime, dto.EndTime);
             
             _reservation.Update(res);
             var save = await _uow.SaveAsync();
             if (save)
-            {
                 return ResponseHelper.Success("تم تحديث الحجز بنجاح." , "Reservation updated successfully.");
-
-            }
-
+            
             return ResponseHelper.Failed("لم يتم تحديث الحجز بنجاح.", "Reservation not updated successfully.");
 
         }
+        
 
         // View Personal Reservations
         public async Task<ResponseResult> GetByUserIdAsync(int userId)
@@ -167,26 +140,14 @@ namespace ReservationSystem.Application.Service
                         include: q => q.Include(r => r.Item).Include(r => r.User),
                         asNoTracking: true
                     );
-            if (reservations == null || !reservations.Any())
-            return ResponseHelper.Failed("لا توجد حجوزات لهذا المستخدم.", "No reservations found for this user.");
 
-            //var result = reservations.Select(r => new ReservationDto
-            //{
-            //    Id = r.Id,
-            //    ReservationDate = r.ReservationDate,
-            //    StartTime = r.StartTime,
-            //    EndTime = r.EndTime,
-            //    ItemName = r.Item.Name,
-            //    UserName = r.User.Name,
-            //    Status = r.Status,
-            //    TotalPrice = r.TotalPrice
-            //}).ToList();
+            if (reservations == null || !reservations.Any())
+                return ResponseHelper.Failed("لا توجد حجوزات لهذا المستخدم.", "No reservations found for this user.");
 
             var result = ReservationHelper.MapToReservationDtoList(reservations);
-
-            return ResponseHelper.Success("تم جلب حجوزات المستخدم بنجاح.", "User reservations retrieved successfully.");
-
+                return ResponseHelper.Success("تم جلب حجوزات المستخدم بنجاح.", "User reservations retrieved successfully.");
         }
+
 
         // Confirm Pending Reservation
         public async Task<ResponseResult> ConfirmReservationAsync(int id)
@@ -205,6 +166,7 @@ namespace ReservationSystem.Application.Service
 
             return ResponseHelper.Success("تم تأكيد الحجز بنجاح.", "Reservation confirmed successfully.");
         }
+
 
         // Cancel Reservation
         public async Task<ResponseResult> CancelReservationAsync(int id)
@@ -225,6 +187,7 @@ namespace ReservationSystem.Application.Service
 
             return ResponseHelper.Success("تم إلغاء الحجز بنجاح.", "Reservation cancelled successfully.");
         }
+
 
         //Filter By Date
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
@@ -279,56 +242,9 @@ namespace ReservationSystem.Application.Service
             if (!finalResults.Any())
                     return ResponseHelper.Warning("لا توجد حجوزات تطابق معايير البحث.", "No reservations found matching the search criteria.");
 
-
-            //var result = finalResults.Select(r => new ReservationDto
-            //{
-            //    Id = r.Id,
-            //    ReservationDate = r.ReservationDate,
-            //    StartTime = r.StartTime,
-            //    EndTime = r.EndTime,
-            //    ItemName = r.Item.Name,
-            //    UserName = r.User.Name,
-            //    Status = r.Status,
-            //    IsAvailable = r.IsAvailable,
-            //    TotalPrice = r.TotalPrice
-            //}).ToList();
             var reslut = ReservationHelper.MapToReservationDtoList(finalResults);
 
             return ResponseHelper.Success("تم جلب الحجوزات بنجاح.", "Reservations retrieved successfully.");
-
-        }
-
-        // Helper method for validation
-        private async Task<ResponseResult> ValidateReservationDto(CreateReservationDto dto)
-        {
-            // Validate range time
-            var reservations = await _reservation.AsNoTracking()
-                .Where(r => r.ReservationDate == dto.ReservationDate
-                && ((r.StartTime == dto.StartTime && r.EndTime == dto.EndTime) ||
-                    (dto.StartTime < r.EndTime && dto.EndTime > r.StartTime))
-                && r.IsAvailable == false
-                && r.ItemId == dto.ItemId
-                && r.Status != Status.Cancelled).ToListAsync();
-
-             if (reservations.Any())
-                return ResponseHelper.Warning("الحجز غير متاح حالياً", "Reservation is Currently not available.");
-            
-             // Validate end time is after start time
-            if (dto.EndTime <= dto.StartTime)
-            {
-                return ResponseHelper.Failed("وقت انتهاء الحجز يجب أن يكون بعد وقت البداية.",
-                    "End time must be after start time.");
-            }
-
-            // Validate reservation is not in the past
-            var reservationDateTime = dto.ReservationDate.Add(dto.StartTime);
-            if (reservationDateTime.Date < DateTime.Now.Date)
-            {
-                return ResponseHelper.Failed("لا يمكن إنشاء حجز في الماضي.",
-                  "Cannot create reservation in the past.");
-            }
-
-            return null; 
         }
     }
 }

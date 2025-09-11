@@ -30,5 +30,32 @@
             return reservations.Select(MapToReservationDto).ToList();
         }
 
+        public static async Task<ResponseResult?> ValidateReservationDto(CreateReservationDto dto, IGenericRepository<Reservation> reservationRepository)
+        {
+            // Validate range time
+            var reservations = await reservationRepository.AsNoTracking()
+                .Where(r => r.ReservationDate == dto.ReservationDate
+                && ((r.StartTime == dto.StartTime && r.EndTime == dto.EndTime) ||
+                    (dto.StartTime < r.EndTime && dto.EndTime > r.StartTime))
+                && r.IsAvailable == false
+                && r.ItemId == dto.ItemId
+                && r.Status != Status.Cancelled).ToListAsync();
+
+            if (reservations.Any())
+                return ResponseHelper.Warning("الحجز غير متاح حالياً", "Reservation is Currently not available.");
+
+            // Validate end time is after start time
+            if (dto.EndTime <= dto.StartTime)
+                return ResponseHelper.Failed("وقت انتهاء الحجز يجب أن يكون بعد وقت البداية.", "End time must be after start time.");
+
+
+            // Validate reservation is not in the past
+            var reservationDateTime = dto.ReservationDate.Add(dto.StartTime);
+            if (reservationDateTime.Date < DateTime.Now.Date)
+                return ResponseHelper.Failed("لا يمكن إنشاء حجز في الماضي.", "Cannot create reservation in the past.");
+
+            return null;
+        }
+
     }
 }
