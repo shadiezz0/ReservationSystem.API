@@ -89,5 +89,16 @@ namespace ReservationSystem.API.Controllers
             var result = await _roleService.AssignPermissionsToRoleAsync(roleId, permissionIds);
             return Ok(result);
         }
+
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetCurrentUserProfile()
+        {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Users, PermissionAction.Show);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+            var result = await _roleService.GetCurrentUserProfileAsync();
+            return Ok(result);
+        }
+
     }
 }

@@ -6,6 +6,7 @@ namespace ReservationSystem.Application.Service
     {
         private readonly IUnitOfWork _uow;
         private readonly IGenericRepository<Role> _roleRepo;
+        private readonly IGenericRepository<User> _userRepo;
         private readonly IGenericRepository<RolePermission> _rolePermissionRepo;
 
         public RoleService(IUnitOfWork uow)
@@ -13,6 +14,7 @@ namespace ReservationSystem.Application.Service
             _uow = uow;
             _roleRepo = uow.Repository<Role>();
             _rolePermissionRepo = uow.Repository<RolePermission>();
+            _userRepo = uow.Repository<User>();
         }
 
         public async Task<ResponseResult> GetAllRolesAsync()
@@ -341,6 +343,36 @@ namespace ReservationSystem.Application.Service
                     MessageAr = "تم تحديث صلاحيات الدور بنجاح"
                 }
             };
+        }
+
+        public async Task<ResponseResult> GetCurrentUserProfileAsync()
+        {
+            var currentUserId = ResponseHelper.GetCurrentUserId();
+
+            var user = await _userRepo.FindOneAsync(
+                u => u.Id == currentUserId,
+                include: query => query
+                    .Include(u => u.Role)
+                    .Include(u => u.Reservations)
+                        .ThenInclude(r => r.Item),
+                asNoTracking: true
+            );
+
+            if (user == null)
+                return ResponseHelper.Warning("المستخدم غير موجود", "User not found");
+
+            var userProfile = new UserProfileDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.Role.Name,
+                RoleType = user.Role.RoleType,
+                ReservationCount = user.Reservations?.Count ?? 0,
+            };
+
+            return ResponseHelper.Success("تم استرجاع ملف المستخدم بنجاح", "User profile retrieved successfully", userProfile);
         }
     }
 }

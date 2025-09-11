@@ -9,6 +9,8 @@
         Task<ResponseResult> DeleteRoleAsync(int id);
         Task<ResponseResult> GetPermissionsForRoleAsync(int roleId);
         Task<ResponseResult> AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds);
+        Task<ResponseResult> GetCurrentUserProfileAsync();
+
     }
 
 }
