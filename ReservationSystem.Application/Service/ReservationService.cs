@@ -43,7 +43,7 @@
             var save = await _uow.SaveAsync();
             if (save)
             {
-                 return ResponseHelper.Success("تم إنشاء الحجز بنجاح.", "Reservation created successfully.", reservation);
+                 return ResponseHelper.Success("تم إنشاء الحجز بنجاح.", "Reservation created successfully.");
             }
             return ResponseHelper.Failed("لم يتم إنشاء الحجز بنجاح.", "Reservation Not created successfully.");
         }
@@ -53,12 +53,16 @@
         public async Task<ResponseResult> DeleteAsync(int id)
         {
             var res = await _reservation.GetByIdAsync(id);
+            var userId = await ResponseHelper.GetCurrentUserId();
+            if(res.UserId != userId)
+                return ResponseHelper.Failed("ليس لديك صلاحية.", "not Authorize.");
+
             if (res == null)
                return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
             _reservation.Delete(res);
             await _uow.SaveAsync();
 
-            return ResponseHelper.Success("تم حذف الحجز بنجاح.", "Reservation deleted successfully.",res);
+            return ResponseHelper.Success("تم حذف الحجز بنجاح.", "Reservation deleted successfully.",res.Id);
         }
 
 
@@ -115,7 +119,12 @@
             if (item == null)
                 return ResponseHelper.Warning("العنصر غير موجود.", "Item not found.");
 
+            var userId = await ResponseHelper.GetCurrentUserId();
+
             var res = await _reservation.GetByIdAsync(dto.Id);
+            if (res.UserId != userId)
+                return ResponseHelper.Failed("ليس لديك صلاحية.", "not Authorize.");
+
             if (res == null)
                return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
 
@@ -177,12 +186,16 @@
         public async Task<ResponseResult> CancelReservationAsync(int id)
         {
             var res = await _reservation.GetByIdAsync(id);
+            var userId = await ResponseHelper.GetCurrentUserId();
             if (res == null)
-            return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
+                return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
+            if (res.UserId != userId)
+                return ResponseHelper.Failed("ليس لديك صلاحية.", "not Authorize.");
+            
 
             if (res.Status == Status.Cancelled)
-            return ResponseHelper.Warning("لا يمكن إلغاء الحجز بعد تأكيده.",
-                "Cannot cancel reservation after it has been confirmed.");
+            return ResponseHelper.Warning("تم إلغاء الحجز مسبقاً",
+                "The reservation has been cancel.");
 
             res.Status = Status.Cancelled;
             res.IsAvailable = true;

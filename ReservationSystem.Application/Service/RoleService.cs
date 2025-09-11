@@ -347,7 +347,7 @@ namespace ReservationSystem.Application.Service
 
         public async Task<ResponseResult> GetCurrentUserProfileAsync()
         {
-            var currentUserId = ResponseHelper.GetCurrentUserId();
+            var currentUserId = await ResponseHelper.GetCurrentUserId();
 
             var user = await _userRepo.FindOneAsync(
                 u => u.Id == currentUserId,
