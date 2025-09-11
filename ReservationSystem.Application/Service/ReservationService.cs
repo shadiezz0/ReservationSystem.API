@@ -25,7 +25,7 @@
             if (item == null || item.ItemTypeId == 0)
                return ResponseHelper.Warning("العنصر غير موجود.", "Item not found.");
 
-            var userId = ResponseHelper.GetCurrentUserId();
+            var userId = await ResponseHelper.GetCurrentUserId();
 
             var reservation = new Reservation
             {
@@ -43,7 +43,7 @@
             var save = await _uow.SaveAsync();
             if (save)
             {
-                 return ResponseHelper.Success("تم إنشاء الحجز بنجاح.", "Reservation created successfully.");
+                 return ResponseHelper.Success("تم إنشاء الحجز بنجاح.", "Reservation created successfully.", reservation);
             }
             return ResponseHelper.Failed("لم يتم إنشاء الحجز بنجاح.", "Reservation Not created successfully.");
         }
@@ -58,15 +58,18 @@
             _reservation.Delete(res);
             await _uow.SaveAsync();
 
-            return ResponseHelper.Success("تم حذف الحجز بنجاح.", "Reservation deleted successfully.");
+            return ResponseHelper.Success("تم حذف الحجز بنجاح.", "Reservation deleted successfully.",res);
         }
 
 
         //  View All Reservations
         public async Task<ResponseResult> GetAllAsync()
         {
+            var userId = await ResponseHelper.GetCurrentUserId();
+
             var data = await _reservation.GetAllAsync(
-                        include: q => q.Include(r => r.Item).Include(r => r.User),
+                        a=> a.UserId == userId,
+                        include: q => q.Include(r => r.Item),
                         asNoTracking: true
                     );
             
@@ -77,16 +80,18 @@
 
             var result = ReservationHelper.MapToReservationDtoList(data);
 
-            return ResponseHelper.Success("تم جلب جميع الحجوزات بنجاح.", "All reservations retrieved successfully.");
+            return ResponseHelper.Success("تم جلب جميع الحجوزات بنجاح.", "All reservations retrieved successfully.",result ,result.Count());
         }
 
 
         // View Reservation Details
         public async Task<ResponseResult> GetByIdAsync(int id)
         {
+           
+
             var res = await _reservation.GetByIdAsync(
                             id,
-                            include: q => q.Include(r => r.Item).Include(r => r.User),
+                            include: q => q.Include(r => r.Item),
                             asNoTracking: true
                         );
 
@@ -94,7 +99,7 @@
               return ResponseHelper.Warning("الحجز غير موجود.", "Reservation not found.");
 
             var result = ReservationHelper.MapToReservationDto(res);
-                return ResponseHelper.Success("تم جلب تفاصيل الحجز بنجاح.", "Reservation details retrieved successfully.");
+                return ResponseHelper.Success("تم جلب تفاصيل الحجز بنجاح.", "Reservation details retrieved successfully.",result);
         }
 
 
@@ -125,9 +130,9 @@
             _reservation.Update(res);
             var save = await _uow.SaveAsync();
             if (save)
-                return ResponseHelper.Success("تم تحديث الحجز بنجاح." , "Reservation updated successfully.");
+                return ResponseHelper.Success("تم تحديث الحجز بنجاح." , "Reservation updated successfully.",res);
             
-            return ResponseHelper.Failed("لم يتم تحديث الحجز بنجاح.", "Reservation not updated successfully.");
+            return ResponseHelper.Failed("لم يتم تحديث الحجز بنجاح.", "Reservation not updated successfully.",res);
 
         }
         
@@ -145,7 +150,7 @@
                 return ResponseHelper.Failed("لا توجد حجوزات لهذا المستخدم.", "No reservations found for this user.");
 
             var result = ReservationHelper.MapToReservationDtoList(reservations);
-                return ResponseHelper.Success("تم جلب حجوزات المستخدم بنجاح.", "User reservations retrieved successfully.");
+                return ResponseHelper.Success("تم جلب حجوزات المستخدم بنجاح.", "User reservations retrieved successfully.",result,result.Count);
         }
 
 
@@ -164,7 +169,7 @@
             _reservation.Update(res);
             await _uow.SaveAsync();
 
-            return ResponseHelper.Success("تم تأكيد الحجز بنجاح.", "Reservation confirmed successfully.");
+            return ResponseHelper.Success("تم تأكيد الحجز بنجاح.", "Reservation confirmed successfully.",res);
         }
 
 
@@ -185,14 +190,14 @@
             _reservation.Update(res);
             await _uow.SaveAsync();
 
-            return ResponseHelper.Success("تم إلغاء الحجز بنجاح.", "Reservation cancelled successfully.");
+            return ResponseHelper.Success("تم إلغاء الحجز بنجاح.", "Reservation cancelled successfully.", res);
         }
 
 
         //Filter By Date
         public async Task<ResponseResult> FilterByDateAsync(FilterReservationDto dto)
         {
-            var userId = ResponseHelper.GetCurrentUserId();
+            var userId = await ResponseHelper.GetCurrentUserId();
 
             // Start with all reservations
             var filteredReservations =  _reservation.AsNoTracking().Where(a=>a.UserId == userId).Include(a=>a.Item)
@@ -244,7 +249,7 @@
 
             var reslut = ReservationHelper.MapToReservationDtoList(finalResults);
 
-            return ResponseHelper.Success("تم جلب الحجوزات بنجاح.", "Reservations retrieved successfully.");
+            return ResponseHelper.Success("تم جلب الحجوزات بنجاح.", "Reservations retrieved successfully.",reslut , reslut.Count);
         }
     }
 }

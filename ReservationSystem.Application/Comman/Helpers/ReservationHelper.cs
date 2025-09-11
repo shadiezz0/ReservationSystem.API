@@ -18,7 +18,7 @@
                 StartTime = reservation.StartTime,
                 EndTime = reservation.EndTime,
                 ItemName = reservation.Item?.Name ?? string.Empty,
-                UserName = reservation.User?.Name ?? string.Empty,
+                //UserName = reservation.User?.Name ?? string.Empty,
                 Status = reservation.Status,
                 IsAvailable = reservation.IsAvailable,
                 TotalPrice = reservation.TotalPrice
@@ -32,17 +32,30 @@
 
         public static async Task<ResponseResult?> ValidateReservationDto(CreateReservationDto dto, IGenericRepository<Reservation> reservationRepository)
         {
+            var userId = await ResponseHelper.GetCurrentUserId();
+
             // Validate range time
-            var reservations = await reservationRepository.AsNoTracking()
-                .Where(r => r.ReservationDate == dto.ReservationDate
+            var reservations = await reservationRepository.AsNoTracking().Where(a => a.UserId == userId)
+            .Where(r => r.ReservationDate.Date == dto.ReservationDate.Date
                 && ((r.StartTime == dto.StartTime && r.EndTime == dto.EndTime) ||
                     (dto.StartTime < r.EndTime && dto.EndTime > r.StartTime))
                 && r.IsAvailable == false
                 && r.ItemId == dto.ItemId
-                && r.Status != Status.Cancelled).ToListAsync();
+                && r.Status != Status.Cancelled)
+            .Select(r => new ReservationDto
+            {
+                Id = r.Id,
+                ReservationDate = r.ReservationDate,
+                StartTime = r.StartTime,
+                EndTime = r.EndTime,
+        
+                // add only what you need (no navigation properties)
+            })
+            .ToListAsync();
 
             if (reservations.Any())
                 return ResponseHelper.Warning("الحجز غير متاح حالياً", "Reservation is Currently not available.");
+
 
             // Validate end time is after start time
             if (dto.EndTime <= dto.StartTime)

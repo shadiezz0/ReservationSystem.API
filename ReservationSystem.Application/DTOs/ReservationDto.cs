@@ -103,7 +103,6 @@ namespace ReservationSystem.Application.DTOs
     {
         public int Id { get; set; }
         public string ItemName { get; set; }
-        public string UserName { get; set; }
         public DateTime ReservationDate { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
