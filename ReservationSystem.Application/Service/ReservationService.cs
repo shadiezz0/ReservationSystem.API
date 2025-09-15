@@ -253,7 +253,7 @@
             //    filteredReservations = filteredReservations.Where(r => r.UserId == dto.UserId.Value);
            
             // Availability
-            filteredReservations = filteredReservations.Where(r => r.IsAvailable == dto.IsAvailable);
+            filteredReservations = filteredReservations.Where(r => r.IsAvailable == false);
 
             var finalResults = filteredReservations.ToList();
 

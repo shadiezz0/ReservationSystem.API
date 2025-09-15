@@ -45,6 +45,16 @@ namespace ReservationSystem.Infrastructure.Seeding
 
             await AssignPermissionsToRole(admin.Id, adminPermissions);
 
+            // User → Show-only on Items + ItemTypes + Reservations
+            var userPermissions = permissions
+                .Where(p =>
+                    (p.Resource == ResourceType.Items ||
+                     p.Resource == ResourceType.ItemTypes ||
+                     p.Resource == ResourceType.Reservations) &&
+                    p.isShow && !p.isAdd && !p.isEdit && !p.isDelete)
+                .ToList();
+            await AssignPermissionsToRole(user.Id, userPermissions);
+
             // Seed SuperAdmin User and If not, creates one
             var existingUser = await _userRepo.FindOneAsync(u => u.Email == "sh@sys.com");
             if (existingUser == null)
@@ -102,6 +112,62 @@ namespace ReservationSystem.Infrastructure.Seeding
             await _uow.SaveAsync();
             return list;
         }
+
+        //private async Task<List<Permission>> SeedPermissions()
+        //{
+        //    var list = new List<Permission>();
+
+        //    foreach (var resource in Enum.GetValues<ResourceType>())
+        //    {
+        //        // --- Full Access Permission ---
+        //        var fullPerm = await _permissionRepo.FindOneAsync(p =>
+        //            p.Resource == resource &&
+        //            p.isShow == true &&
+        //            p.isAdd == true &&
+        //            p.isEdit == true &&
+        //            p.isDelete == true);
+
+        //        if (fullPerm == null)
+        //        {
+        //            fullPerm = new Permission
+        //            {
+        //                Resource = resource,
+        //                isShow = true,
+        //                isAdd = true,
+        //                isEdit = true,
+        //                isDelete = true
+        //            };
+        //            await _permissionRepo.AddAsync(fullPerm);
+        //        }
+        //        list.Add(fullPerm);
+
+        //        // --- Show Only Permission ---
+        //        var showOnlyPerm = await _permissionRepo.FindOneAsync(p =>
+        //            p.Resource == resource &&
+        //            p.isShow == true &&
+        //            p.isAdd == false &&
+        //            p.isEdit == false &&
+        //            p.isDelete == false);
+
+        //        if (showOnlyPerm == null)
+        //        {
+        //            showOnlyPerm = new Permission
+        //            {
+        //                Resource = resource,
+        //                isShow = true,
+        //                isAdd = false,
+        //                isEdit = false,
+        //                isDelete = false
+        //            };
+        //            await _permissionRepo.AddAsync(showOnlyPerm);
+        //        }
+        //        list.Add(showOnlyPerm);
+        //    }
+
+        //    await _uow.SaveAsync();
+        //    return list;
+        //}
+
 
         private async Task AssignPermissionsToRole(int roleId, List<Permission> permissions)
         {
