@@ -345,6 +345,7 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+
         public async Task<ResponseResult> GetCurrentUserProfileAsync()
         {
             var currentUserId = await ResponseHelper.GetCurrentUserId();
