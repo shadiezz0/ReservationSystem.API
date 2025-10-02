@@ -14,6 +14,11 @@ namespace ReservationSystem.Application.DTOs
         public bool IsEdit { get; set; }
         public bool IsDelete { get; set; }
 
-        public int RoleId { get; set; } = 3;  // Assign permission directly to a role
+        public int RoleId { get; set; }   // Assign permission directly to a role
+    }
+    public class UpdateRole
+    {
+        public int RoleId { get; set; }   
+        public int UserId { get; set; }
     }
 }

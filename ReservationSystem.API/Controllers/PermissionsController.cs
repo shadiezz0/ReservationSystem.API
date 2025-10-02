@@ -1,4 +1,5 @@
-﻿using ReservationSystem.Domain.Entities;
+﻿using ReservationSystem.Application.Service;
+using ReservationSystem.Domain.Entities;
 
 
 namespace ReservationSystem.API.Controllers
@@ -9,10 +10,12 @@ namespace ReservationSystem.API.Controllers
     {
 
         private readonly IPermissionCheckerService _permissionService;
+        private readonly IRoleService _roleService;
 
-        public PermissionsController(IPermissionCheckerService permissionService)
+        public PermissionsController(IPermissionCheckerService permissionService, IRoleService roleService)
         {
             _permissionService = permissionService;
+            _roleService = roleService;
         }
         [HttpPost("create")]
         [Authorize(Roles = "SuperAdmin")]
@@ -32,6 +35,19 @@ namespace ReservationSystem.API.Controllers
              
             });
             
+        }
+        [HttpPut("updateRole/{userId}")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> UpdateUserRole(int userId, [FromBody] int newRoleId)
+        {
+            var permissionResult = await _permissionService.HasPermissionAsync(ResourceType.Users, PermissionAction.Edit);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+            var success = await _roleService.UpdateUserRoleAsync(userId, newRoleId);
+            if (success.Result != Result.Success)
+                return NotFound(new { MessageAr = success.Alart.MessageAr, MessageEn = success.Alart.MessageEn });
+
+            return Ok(new { MessageAr = success.Alart.MessageAr , MessageEn = success.Alart.MessageEn , data = success.Data});
         }
     }
 }
