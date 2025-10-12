@@ -11,5 +11,8 @@
         public int RoleId { get; set; }
         public Role Role { get; set; }
         public ICollection<Reservation> Reservations { get; set; }
+        
+        // Items created by this user (for admins)
+        public ICollection<Item> CreatedItems { get; set; }
     }
 }

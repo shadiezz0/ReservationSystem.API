@@ -1,6 +1,4 @@
-﻿
-
-namespace ReservationSystem.Infrastructure.Context.Configurations
+﻿namespace ReservationSystem.Infrastructure.Context.Configurations
 {
     public class ItemConfiguration : IEntityTypeConfiguration<Item>
     {
@@ -12,6 +10,12 @@ namespace ReservationSystem.Infrastructure.Context.Configurations
             builder.HasMany(i => i.Reservations)
                    .WithOne(r => r.Item)
                    .HasForeignKey(r => r.ItemId);
+
+            // Configure relationship with User (CreatedBy)
+            builder.HasOne(i => i.CreatedBy)
+                   .WithMany(u => u.CreatedItems)
+                   .HasForeignKey(i => i.CreatedById)
+                   .OnDelete(DeleteBehavior.Restrict); // Prevent deleting user if they have created items
         }
     }
 }

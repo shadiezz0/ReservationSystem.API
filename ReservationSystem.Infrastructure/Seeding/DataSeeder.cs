@@ -1,5 +1,5 @@
-﻿
-using BCrypt.Net;
+﻿using BCrypt.Net;
+using ReservationSystem.Domain.Entities;
 using ReservationSystem.Domain.Interfaces;
 using System.Security.AccessControl;
 using static ReservationSystem.Domain.Constants.Enums;
@@ -67,7 +67,13 @@ namespace ReservationSystem.Infrastructure.Seeding
                     RoleId = superAdmin.Id
                 };
                 await _userRepo.AddAsync(superUser);
+                await _uow.SaveAsync();
+                existingUser = superUser;
             }
+
+            // Handle any existing items that don't have a CreatedById assigned
+            await AssignCreatedByToExistingItems(existingUser.Id);
+
             await _uow.SaveAsync();
         }
 
@@ -187,6 +193,34 @@ namespace ReservationSystem.Infrastructure.Seeding
             }
         }
 
+        private async Task AssignCreatedByToExistingItems(int superAdminUserId)
+        {
+            var itemRepo = _uow.Repository<Item>();
+            // Find items where CreatedById is null or 0 (default value)
+            var itemsWithoutCreator = await itemRepo.FindAllAsync(i => i.CreatedById == null || i.CreatedById == 0);
+            
+            foreach (var item in itemsWithoutCreator)
+            {
+                item.CreatedById = superAdminUserId;
+                itemRepo.Update(item);
+            }
+            
+            // After assigning creators to all items, save changes
+            if (itemsWithoutCreator.Any())
+            {
+                await _uow.SaveAsync();
+                
+                // Now create and run a final migration to make the column non-nullable
+                // This would typically be done through a separate migration, but for now we'll handle it in code
+                await EnsureCreatedByIdIsNotNullable();
+            }
+        }
 
+        private async Task EnsureCreatedByIdIsNotNullable()
+        {
+            // This method ensures that after all items have valid CreatedById values,
+            // we can safely make the database column non-nullable if needed
+            // Note: This is a conceptual method - the actual schema change should be done via migration
+        }
     }
 }

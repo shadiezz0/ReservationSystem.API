@@ -5,7 +5,6 @@
         public string Name { get; set; }
         public string Description { get; set; }
         public double PricePerHour { get; set; }
-        public bool IsAvailable { get; set; }
         public int ItemTypeId { get; set; }
     }
 
@@ -20,8 +19,9 @@
         public string Name { get; set; }
         public string Description { get; set; }
         public double PricePerHour { get; set; }
-        public bool IsAvailable { get; set; }
         public string ItemTypeName { get; set; }
+        public string CreatedByName { get; set; }
+        public int CreatedById { get; set; }
     }
 
 }
