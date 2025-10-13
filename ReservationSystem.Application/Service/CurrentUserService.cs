@@ -6,10 +6,11 @@ namespace ReservationSystem.Application.Service
     public class CurrentUserService : ICurrentUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+        private readonly IGenericRepository<User> _userRepo;
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor,IGenericRepository<User> userRepo)
         {
             _httpContextAccessor = httpContextAccessor;
+            _userRepo = userRepo;
         }
 
         public int? GetCurrentUserId()
@@ -24,6 +25,13 @@ namespace ReservationSystem.Application.Service
         public string? GetCurrentUserRole()
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value;
+        }
+
+        public async Task<bool> IsAdmin(int? userId)
+        {
+            var user = await _userRepo.FindOneAsync(a => a.Id == userId);
+            var role = user.RoleId;
+            return role == (int)RoleType.Admin || role == (int)RoleType.SuperAdmin;
         }
 
         public bool IsCurrentUserSuperAdmin()

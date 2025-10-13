@@ -34,7 +34,7 @@ namespace ReservationSystem.Application.Service
             }
 
             // Check if user can create more items
-            if (!await CanUserCreateMoreItemsAsync(currentUserId.Value))
+            if (!await CanUserCreateMoreItemsAsync())
             {
                 return new ResponseResult
                 {
@@ -48,14 +48,28 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
-
+            if (!await IsAdminAsync(dto.AdminId))
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.popup,
+                        MessageAr = "هناك خطأ في تحديد المشرف",
+                        MessageEn = "There is an error in specifying the supervisor."
+                    }
+                };
+            }
             var item = new Item
             {
                 Name = dto.Name,
                 Description = dto.Description,
                 PricePerHour = dto.PricePerHour,
                 ItemTypeId = dto.ItemTypeId,
-                CreatedById = currentUserId.Value
+                CreatedById = currentUserId.Value,
+                AdminId = dto.AdminId
             };
 
             await _Itemrepo.AddAsync(item);
@@ -270,7 +284,55 @@ namespace ReservationSystem.Application.Service
                 }
             };
         }
+        public async Task<ResponseResult> GetItemByAdminAsync()
+        {
+            var currentUserId = _currentUserService.GetCurrentUserId();
+            var item = await _Itemrepo.FindOneAsync(a=>a.AdminId == currentUserId);
 
+            if (item == null)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.NoDataFound,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.error,
+                        type = AlartShow.note,
+                        MessageAr = "العنصر غير موجود.",
+                        MessageEn = "Item not found."
+                    }
+                };
+            }
+
+            // Check if user can access this item
+            if (!await IsAdminAsync(currentUserId))
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Unauthorized,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.Unauthorized,
+                        type = AlartShow.popup,
+                        MessageAr = "غير مصرح لك بالوصول لهذا العنصر.",
+                        MessageEn = "You are not authorized to access this item."
+                    }
+                };
+            }
+
+            return new ResponseResult
+            {
+                Data = item,
+                Result = Result.Success,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.success,
+                    type = AlartShow.note,
+                    MessageAr = "تم العثور على العنصر.",
+                    MessageEn = "Item found."
+                }
+            };
+        }
         public async Task<ResponseResult> UpdateAsync(UpdateItemDto dto)
         {
             var item = await _Itemrepo.GetByIdAsync(dto.Id);
@@ -288,7 +350,20 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
-
+            if (!await IsAdminAsync(dto.AdminId))
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.popup,
+                        MessageAr = "هناك خطأ في تحديد المشرف",
+                        MessageEn = "There is an error in specifying the supervisor."
+                    }
+                };
+            }
             // Check if user can update this item
             if (!CanUserAccessItem(item))
             {
@@ -309,7 +384,7 @@ namespace ReservationSystem.Application.Service
             item.Description = dto.Description;
             item.PricePerHour = dto.PricePerHour;
             item.ItemTypeId = dto.ItemTypeId;
-
+            item.AdminId = dto.AdminId;
             _Itemrepo.Update(item);
             var saveResult = await _uow.SaveAsync();
 
@@ -337,10 +412,15 @@ namespace ReservationSystem.Application.Service
             return currentUserId.HasValue && item.CreatedById.HasValue && item.CreatedById.Value == currentUserId.Value;
         }
 
-        private async Task<bool> CanUserCreateMoreItemsAsync(int userId)
+        private async Task<bool> CanUserCreateMoreItemsAsync()
         {
             // Only SuperAdmin can create items
             return _currentUserService.IsCurrentUserSuperAdmin();
+        }
+        private async Task<bool> IsAdminAsync(int? userId)
+        {
+            // Only SuperAdmin can create items
+            return await _currentUserService.IsAdmin(userId);
         }
     }
 }

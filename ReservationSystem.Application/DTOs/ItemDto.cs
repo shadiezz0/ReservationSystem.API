@@ -6,6 +6,8 @@
         public string Description { get; set; }
         public double PricePerHour { get; set; }
         public int ItemTypeId { get; set; }
+        //public string AdminName { get; set; }
+        public int AdminId { get; set; }
     }
 
     public class UpdateItemDto : CreateItemDto
@@ -22,6 +24,7 @@
         public string ItemTypeName { get; set; }
         public string CreatedByName { get; set; }
         public int CreatedById { get; set; }
+
     }
 
 }

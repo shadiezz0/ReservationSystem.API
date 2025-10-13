@@ -8,5 +8,6 @@
         Task<ResponseResult> GetAllAsync();
         Task<ResponseResult> GetByIdAsync(int id);
         Task<ResponseResult> FilterByTypeAsync(int itemTypeId);
+        Task<ResponseResult> GetItemByAdminAsync();
     }
 }

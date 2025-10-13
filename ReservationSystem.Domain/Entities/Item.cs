@@ -7,6 +7,7 @@
         public string Description { get; set; }
         public double PricePerHour { get; set; }
         public int ItemTypeId { get; set; }
+        public int AdminId { get; set; }
         public ItemType ItemType { get; set; }
 
         // Link item to the admin who created it

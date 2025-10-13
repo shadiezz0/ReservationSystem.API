@@ -6,5 +6,6 @@ namespace ReservationSystem.Application.IService
         string? GetCurrentUserRole();
         bool IsCurrentUserSuperAdmin();
         bool IsCurrentUserAdmin();
+        Task<bool> IsAdmin(int? userId);
     }
 }
