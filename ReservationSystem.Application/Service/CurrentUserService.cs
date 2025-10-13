@@ -31,7 +31,7 @@ namespace ReservationSystem.Application.Service
         {
             var user = await _userRepo.FindOneAsync(a => a.Id == userId);
             var role = user.RoleId;
-            return role == (int)RoleType.Admin || role == (int)RoleType.SuperAdmin;
+            return role == (int)RoleType.Admin ;
         }
 
         public bool IsCurrentUserSuperAdmin()
