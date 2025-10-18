@@ -16,6 +16,9 @@
                    .WithMany(u => u.CreatedItems)
                    .HasForeignKey(i => i.CreatedById)
                    .OnDelete(DeleteBehavior.Restrict); // Prevent deleting user if they have created items
+
+            builder.HasIndex(p => p.AdminId)
+                   .IsUnique();
         }
     }
 }

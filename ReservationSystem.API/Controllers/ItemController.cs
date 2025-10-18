@@ -67,7 +67,7 @@
             var result = await _itemService.GetByIdAsync(id);
             return Ok(result);
         }
-        [HttpGet]
+        [HttpGet("GetByAdminId")]
         public async Task<IActionResult> GetByAdminId()
         {
             var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Items, PermissionAction.Show);
