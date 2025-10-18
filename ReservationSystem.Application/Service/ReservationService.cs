@@ -212,9 +212,11 @@
         {
             var userId = await ResponseHelper.GetCurrentUserId();
 
-            // Start with all reservations
-            var filteredReservations =  _reservation.AsNoTracking().Where(a=>a.UserId == userId).Include(a=>a.Item)
-               .AsQueryable();
+            // Start with all reservations for the user and include Item first
+            var filteredReservations = _reservation.AsNoTracking()
+                .Where(a => a.UserId == userId)
+                .Include(a => a.Item)
+                .AsQueryable();
             
             // Date filtering
             if (dto.FromDate != default && dto.ToDate != default)
@@ -253,9 +255,9 @@
             //    filteredReservations = filteredReservations.Where(r => r.UserId == dto.UserId.Value);
            
             // Availability
-            filteredReservations = filteredReservations.Where(r => r.IsAvailable == dto.IsAvailable);
+            filteredReservations = filteredReservations.Where(r => r.IsAvailable == false);
 
-            var finalResults = filteredReservations.ToList();
+            var finalResults = await filteredReservations.ToListAsync();
 
             if (!finalResults.Any())
                     return ResponseHelper.Warning("لا توجد حجوزات تطابق معايير البحث.", "No reservations found matching the search criteria.");

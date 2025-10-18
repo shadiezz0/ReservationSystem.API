@@ -12,8 +12,8 @@ using ReservationSystem.Infrastructure.Context;
 namespace ReservationSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250830113615_AddIsAvailableColInReservation")]
-    partial class AddIsAvailableColInReservation
+    [Migration("20251012101144_createuserforitemTB")]
+    partial class createuserforitemTB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,9 @@ namespace ReservationSystem.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -48,6 +51,8 @@ namespace ReservationSystem.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
 
                     b.HasIndex("ItemTypeId");
 
@@ -147,15 +152,17 @@ namespace ReservationSystem.Infrastructure.Migrations
                     b.Property<int>("ItemId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ItemTypeId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("ReservationDate")
                         .HasColumnType("datetime2");
 
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
@@ -239,11 +246,18 @@ namespace ReservationSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("ReservationSystem.Domain.Entities.Item", b =>
                 {
+                    b.HasOne("ReservationSystem.Domain.Entities.User", "CreatedBy")
+                        .WithMany("CreatedItems")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ReservationSystem.Domain.Entities.ItemType", "ItemType")
                         .WithMany("Items")
                         .HasForeignKey("ItemTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("ItemType");
                 });
@@ -332,6 +346,8 @@ namespace ReservationSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("ReservationSystem.Domain.Entities.User", b =>
                 {
+                    b.Navigation("CreatedItems");
+
                     b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618

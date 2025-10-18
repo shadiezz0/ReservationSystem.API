@@ -12,8 +12,8 @@ using ReservationSystem.Infrastructure.Context;
 namespace ReservationSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250727080448_myintialmig")]
-    partial class myintialmig
+    [Migration("20251013094112_addAdminIdInItem")]
+    partial class addAdminIdInItem
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,12 +33,15 @@ namespace ReservationSystem.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsAvailable")
-                        .HasColumnType("bit");
 
                     b.Property<int>("ItemTypeId")
                         .HasColumnType("int");
@@ -51,6 +54,8 @@ namespace ReservationSystem.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
 
                     b.HasIndex("ItemTypeId");
 
@@ -144,7 +149,13 @@ namespace ReservationSystem.Infrastructure.Migrations
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
 
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemTypeId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ReservationDate")
@@ -153,9 +164,8 @@ namespace ReservationSystem.Infrastructure.Migrations
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
@@ -239,11 +249,18 @@ namespace ReservationSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("ReservationSystem.Domain.Entities.Item", b =>
                 {
+                    b.HasOne("ReservationSystem.Domain.Entities.User", "CreatedBy")
+                        .WithMany("CreatedItems")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ReservationSystem.Domain.Entities.ItemType", "ItemType")
                         .WithMany("Items")
                         .HasForeignKey("ItemTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("ItemType");
                 });
@@ -332,6 +349,8 @@ namespace ReservationSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("ReservationSystem.Domain.Entities.User", b =>
                 {
+                    b.Navigation("CreatedItems");
+
                     b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618

@@ -83,10 +83,6 @@ namespace ReservationSystem.Application.DTOs
         public int ItemId { get; set; } = 0;
         public int ItemTypeId { get; set; } = 0;
 
-        // Availability filter
-        [DefaultValue("false")]
-        public bool IsAvailable { get; set; } = false;
-
         // Status filter
         public Status Status { get; set; } = 0;
 

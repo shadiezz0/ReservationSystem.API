@@ -10,7 +10,7 @@
         Task<ResponseResult> GetPermissionsForRoleAsync(int roleId);
         Task<ResponseResult> AssignPermissionsToRoleAsync(int roleId, List<int> permissionIds);
         Task<ResponseResult> GetCurrentUserProfileAsync();
-
+        Task<ResponseResult> UpdateUserRoleAsync(int userId, int newRoleId);
     }
 
 }

@@ -67,7 +67,16 @@
             var result = await _itemService.GetByIdAsync(id);
             return Ok(result);
         }
+        [HttpGet]
+        public async Task<IActionResult> GetByAdminId()
+        {
+            var permissionResult = await _permissionCheckerService.HasPermissionAsync(ResourceType.Items, PermissionAction.Show);
+            if (permissionResult != null)
+                return Ok(permissionResult);
 
+            var result = await _itemService.GetItemByAdminAsync();
+            return Ok(result);
+        }
         //[HttpGet("Available")]
         //[Authorize(Roles = "Admin,SuperAdmin,User")]
         //public async Task<IActionResult> GetAvailable()

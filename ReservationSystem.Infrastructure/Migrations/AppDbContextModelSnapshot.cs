@@ -30,6 +30,12 @@ namespace ReservationSystem.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -45,6 +51,8 @@ namespace ReservationSystem.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
 
                     b.HasIndex("ItemTypeId");
 
@@ -238,11 +246,18 @@ namespace ReservationSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("ReservationSystem.Domain.Entities.Item", b =>
                 {
+                    b.HasOne("ReservationSystem.Domain.Entities.User", "CreatedBy")
+                        .WithMany("CreatedItems")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ReservationSystem.Domain.Entities.ItemType", "ItemType")
                         .WithMany("Items")
                         .HasForeignKey("ItemTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("ItemType");
                 });
@@ -331,6 +346,8 @@ namespace ReservationSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("ReservationSystem.Domain.Entities.User", b =>
                 {
+                    b.Navigation("CreatedItems");
+
                     b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618

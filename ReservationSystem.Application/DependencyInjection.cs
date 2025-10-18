@@ -16,7 +16,10 @@ namespace ReservationSystem.Application
             services.AddScoped<IItemTypeService, ItemTypeService>();
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddHttpContextAccessor();
+
+
             return services;
         }
     }

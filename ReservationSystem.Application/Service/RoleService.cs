@@ -345,6 +345,7 @@ namespace ReservationSystem.Application.Service
             };
         }
 
+
         public async Task<ResponseResult> GetCurrentUserProfileAsync()
         {
             var currentUserId = await ResponseHelper.GetCurrentUserId();
@@ -374,5 +375,44 @@ namespace ReservationSystem.Application.Service
 
             return ResponseHelper.Success("تم استرجاع ملف المستخدم بنجاح", "User profile retrieved successfully", userProfile);
         }
+        public async Task<ResponseResult> UpdateUserRoleAsync(int userId, int newRoleId)
+        {
+            // 1️⃣ Check user exists
+            var user = await _userRepo.FindOneAsync(a => a.Id == userId);
+            if (user == null)
+                return ResponseHelper.Failed("المستخدم غير موجود", "User not found");
+
+            // 2️⃣ (Optional) Validate newRoleId exists in Roles table
+            var role = await _roleRepo.FindOneAsync(r => r.Id == newRoleId);
+            if (role == null)
+                return ResponseHelper.Failed("الدور غير موجود", "Role not found");
+
+            // 3️⃣ Update role
+            user.RoleId = newRoleId;
+            _userRepo.Update(user);
+            await _uow.SaveAsync();
+
+            return ResponseHelper.Success("تم تحديث دور المستخدم بنجاح", "User role updated successfully", new
+            {
+                UserId = user.Id,
+                UserName = user.Name,
+                NewRoleId = user.RoleId,
+                NewRoleName = role.Name
+            });
+        }
+
+        //public async Task<ResponseResult> UpdateUserRoleAsync(int userId, int newRoleId)
+        //{
+        //    var user = await _userRepo.FindOneAsync(a=>a.Id==userId);
+        //    if (user == null)
+        //        return ResponseHelper.Failed("","");
+
+
+        //    user.RoleId = newRoleId;
+        //     _userRepo.Update(user);
+        //    await _uow.SaveAsync();
+        //    return ResponseHelper.Success("تم تحديث البيانات بنجاح", "Data updated successfully", user);
+
+        //}
     }
 }
