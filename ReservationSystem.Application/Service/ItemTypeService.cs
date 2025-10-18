@@ -22,7 +22,7 @@ public class ItemTypeService : IItemTypeService
 
         return new ResponseResult
         {
-            Data = itemType.Id,
+            Data = itemType,
             Result = saveResult ? Result.Success : Result.Failed,
             Alart = new Alart
             {
