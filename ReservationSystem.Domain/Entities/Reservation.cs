@@ -18,7 +18,8 @@ namespace ReservationSystem.Domain.Entities
         public int ItemId { get; set; }
         public Item Item { get; set; }
 
-        public int ItemTypeId { get; set; }
+        public int ItemTypeId { get; set; }// selected one from item.ItemTypes
+        public ItemType ItemType { get; set; }
     }
 }
 // 1- time handle reservation for start and end 

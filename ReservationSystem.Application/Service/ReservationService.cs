@@ -21,9 +21,21 @@
                 return validationResult;
 
 
-            var item = await _itemRepo.GetByIdAsync(dto.ItemId);
-            if (item == null || item.ItemTypeId == 0)
-               return ResponseHelper.Warning("العنصر غير موجود.", "Item not found.");
+            var item = await _itemRepo.GetByIdAsync(
+                dto.ItemId,
+                include: q => q.Include(i => i.ItemTypes)
+            );
+
+            if (item == null)
+                return ResponseHelper.Warning("العنصر غير موجود.", "Item not found.");
+
+            // ✅ Check if the selected ItemTypeId is valid for this Item
+            if (!item.ItemTypes.Any(t => t.Id == dto.ItemTypeId))
+                return ResponseHelper.Warning("نوع العنصر غير مرتبط بهذا العنصر.", "This item type is not linked to the selected item.");
+            // ✅ Calculate total price safely
+            var totalPrice = ReservationHelper.CalculateTotalPrice(item.PricePerHour, dto.StartTime, dto.EndTime);
+            //if (totalPrice <= 0)
+            //    return ResponseHelper.Warning("مدة الحجز غير صحيحة.", "Invalid reservation duration.");
 
             var userId = await ResponseHelper.GetCurrentUserId();
 
@@ -36,8 +48,8 @@
                 UserId = userId,
                 IsAvailable = false,
                 Status = Status.Pending,
-                TotalPrice = ReservationHelper.CalculateTotalPrice(item.PricePerHour, dto.StartTime, dto.EndTime),
-                ItemTypeId = item.ItemTypeId
+                TotalPrice = totalPrice,
+                ItemTypeId = dto.ItemTypeId,
             };
             await _reservation.AddAsync(reservation);
             var save = await _uow.SaveAsync();

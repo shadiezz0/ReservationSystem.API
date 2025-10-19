@@ -50,9 +50,12 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
-            //check if notfound this itemType in DB
-            var ExistItemType = await _ItemTyperepo.FindOneAsync(a => a.Id == dto.ItemTypeId);
-            if (ExistItemType != null)
+            //  Validate that all ItemTypeIds exist in DB
+
+            var itemTypes = await _ItemTyperepo
+                .FindAllAsync(t => dto.ItemTypeIds.Contains(t.Id));
+
+            if (itemTypes == null || !itemTypes.Any() || itemTypes.Count() != dto.ItemTypeIds.Count)
             {
                 return new ResponseResult
                 {
@@ -61,11 +64,12 @@ namespace ReservationSystem.Application.Service
                     {
                         AlartType = AlartType.warning,
                         type = AlartShow.popup,
-                        MessageAr = "هناك خطأ في بيانات نوع العنصر",
+                        MessageAr = "هناك خطأ في بيانات نوع العنصر.",
                         MessageEn = "There is an error in the item type data."
                     }
                 };
             }
+
             if (!await IsAdminAsync(dto.AdminId))
             {
                 return new ResponseResult
@@ -100,7 +104,7 @@ namespace ReservationSystem.Application.Service
                 Name = dto.Name,
                 Description = dto.Description,
                 PricePerHour = dto.PricePerHour,
-                ItemTypeId = dto.ItemTypeId,
+                ItemTypes = itemTypes.ToList(),
                 CreatedById = currentUserId.Value,
                 AdminId = dto.AdminId
             };
@@ -176,12 +180,25 @@ namespace ReservationSystem.Application.Service
         public async Task<ResponseResult> FilterByTypeAsync(int itemTypeId)
         {
             var currentUserId = _currentUserService.GetCurrentUserId();
-            
+
             // Apply user filtering for non-SuperAdmin users
-            var items = _currentUserService.IsCurrentUserSuperAdmin() 
-                ? await _Itemrepo.FindAllAsync(item => item.ItemTypeId == itemTypeId, asNoTracking: true)
-                : await _Itemrepo.FindAllAsync(item => item.ItemTypeId == itemTypeId && item.CreatedById == currentUserId, asNoTracking: true);
-                
+            // ✅ Query items that have this ItemTypeId in their collection
+            IQueryable<Item> query = _Itemrepo.AsNoTracking()
+       .Where(i => i.ItemTypes.Any(t => t.Id == itemTypeId));
+            
+
+          
+            // 🔐 Restrict to user's own items if not SuperAdmin
+            if (!_currentUserService.IsCurrentUserSuperAdmin() && currentUserId != null)
+            {
+                query = query.Where(i => i.CreatedById == currentUserId);
+            }
+
+            // Include ItemTypes for clarity (optional)
+            query = query.Include(i => i.ItemTypes);
+
+            var items = await query.ToListAsync();
+
             if (items == null || !items.Any())
             {
                 return new ResponseResult
@@ -219,12 +236,12 @@ namespace ReservationSystem.Application.Service
             // SuperAdmin sees all items, others see only their own items
             var items = _currentUserService.IsCurrentUserSuperAdmin()
                 ? await _Itemrepo.GetAllAsync(
-                    include: query => query.Include(i => i.ItemType).Include(i => i.CreatedBy),
+                    include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
                     asNoTracking: true
                 )
                 : await _Itemrepo.GetAllAsync(
                     predicate: i => i.AdminId == currentUserId,
-                    include: query => query.Include(i => i.ItemType).Include(i => i.CreatedBy),
+                    include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
                     asNoTracking: true
                 );
 
@@ -232,7 +249,7 @@ namespace ReservationSystem.Application.Service
             {
                 Id = i.Id,
                 Name = i.Name,
-                ItemTypeName = i.ItemType.Name,
+                ItemTypeNames = string.Join(", ", i.ItemTypes.Select(t => t.Name)),
                 CreatedByName = i.CreatedBy?.Name ?? "Unknown",
                 CreatedById = i.CreatedById ?? 0,
                 AdminId =i.AdminId
@@ -399,9 +416,11 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
-            //check if notfound this itemType in DB
-            var ExistItemType = await _ItemTyperepo.FindOneAsync(a => a.Id == dto.ItemTypeId);
-            if (ExistItemType != null)
+            //check if notfound this itemTypes in DB
+            var itemTypes = await _ItemTyperepo
+                    .FindAllAsync(t => dto.ItemTypeIds.Contains(t.Id));
+
+            if (itemTypes == null || !itemTypes.Any() || itemTypes.Count() != dto.ItemTypeIds.Count)
             {
                 return new ResponseResult
                 {
@@ -410,12 +429,12 @@ namespace ReservationSystem.Application.Service
                     {
                         AlartType = AlartType.warning,
                         type = AlartShow.popup,
-                        MessageAr = "هناك خطأ في بيانات نوع العنصر",
+                        MessageAr = "هناك خطأ في بيانات نوع العنصر.",
                         MessageEn = "There is an error in the item type data."
                     }
                 };
             }
-  
+
             if (!await IsAdminAsync(dto.AdminId))
             {
                 return new ResponseResult
@@ -448,7 +467,7 @@ namespace ReservationSystem.Application.Service
             item.Name = dto.Name;
             item.Description = dto.Description;
             item.PricePerHour = dto.PricePerHour;
-            item.ItemTypeId = dto.ItemTypeId;
+            item.ItemTypes = itemTypes.ToList();
             item.AdminId = dto.AdminId;
             _Itemrepo.Update(item);
             var saveResult = await _uow.SaveAsync();
