@@ -24,7 +24,7 @@
         public string ItemTypeName { get; set; }
         public string CreatedByName { get; set; }
         public int CreatedById { get; set; }
-
+        public int AdminId { get; set; }
     }
 
 }

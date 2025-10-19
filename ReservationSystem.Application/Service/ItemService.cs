@@ -5,16 +5,18 @@ namespace ReservationSystem.Application.Service
     public class ItemService : IItemService
     {
         private readonly IGenericRepository<Item> _Itemrepo;
+        private readonly IGenericRepository<ItemType> _ItemTyperepo;
         private readonly IUnitOfWork _uow;
         private readonly ICurrentUserService _currentUserService;
 
-        public ItemService(IUnitOfWork uow, ICurrentUserService currentUserService)
+        public ItemService(IUnitOfWork uow, ICurrentUserService currentUserService, IGenericRepository<ItemType> itemTyperepo)
         {
             _Itemrepo = uow.Repository<Item>();
             _uow = uow;
             _currentUserService = currentUserService;
+            _ItemTyperepo = itemTyperepo;
         }
-        
+
         public async Task<ResponseResult> CreateAsync(CreateItemDto dto)
         {
             var currentUserId = _currentUserService.GetCurrentUserId();
@@ -32,7 +34,7 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
-
+    
             // Check if user can create more items By SuperAdmin
             if (!await CanUserCreateMoreItemsAsync())
             {
@@ -48,6 +50,22 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
+            //check if notfound this itemType in DB
+            var ExistItemType = await _ItemTyperepo.FindOneAsync(a => a.Id == dto.ItemTypeId);
+            if (ExistItemType != null)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.popup,
+                        MessageAr = "هناك خطأ في بيانات نوع العنصر",
+                        MessageEn = "There is an error in the item type data."
+                    }
+                };
+            }
             if (!await IsAdminAsync(dto.AdminId))
             {
                 return new ResponseResult
@@ -59,6 +77,21 @@ namespace ReservationSystem.Application.Service
                         type = AlartShow.popup,
                         MessageAr = "هناك خطأ في تحديد المشرف",
                         MessageEn = "There is an error in specifying the supervisor."
+                    }
+                };
+            }
+            var Existitem = await _Itemrepo.FindOneAsync(a=>a.AdminId==dto.AdminId);
+            if (Existitem != null)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.popup,
+                        MessageAr = "لقد تم تحديد هذا المشرف من قبل",
+                        MessageEn = "This Admin has been identified by"
                     }
                 };
             }
@@ -190,7 +223,7 @@ namespace ReservationSystem.Application.Service
                     asNoTracking: true
                 )
                 : await _Itemrepo.GetAllAsync(
-                    predicate: i => i.CreatedById == currentUserId,
+                    predicate: i => i.AdminId == currentUserId,
                     include: query => query.Include(i => i.ItemType).Include(i => i.CreatedBy),
                     asNoTracking: true
                 );
@@ -201,7 +234,8 @@ namespace ReservationSystem.Application.Service
                 Name = i.Name,
                 ItemTypeName = i.ItemType.Name,
                 CreatedByName = i.CreatedBy?.Name ?? "Unknown",
-                CreatedById = i.CreatedById ?? 0
+                CreatedById = i.CreatedById ?? 0,
+                AdminId =i.AdminId
             }).ToList();
 
 
@@ -284,55 +318,55 @@ namespace ReservationSystem.Application.Service
                 }
             };
         }
-        public async Task<ResponseResult> GetItemByAdminAsync()
-        {
-            var currentUserId = _currentUserService.GetCurrentUserId();
-            var item = await _Itemrepo.FindOneAsync(a=>a.AdminId == currentUserId);
+        //public async Task<ResponseResult> GetItemByAdminAsync()
+        //{
+        //    var currentUserId = _currentUserService.GetCurrentUserId();
+        //    var item = await _Itemrepo.FindOneAsync(a=>a.AdminId == currentUserId);
 
-            if (item == null)
-            {
-                return new ResponseResult
-                {
-                    Result = Result.NoDataFound,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.error,
-                        type = AlartShow.note,
-                        MessageAr = "العنصر غير موجود.",
-                        MessageEn = "Item not found."
-                    }
-                };
-            }
+        //    if (item == null)
+        //    {
+        //        return new ResponseResult
+        //        {
+        //            Result = Result.NoDataFound,
+        //            Alart = new Alart
+        //            {
+        //                AlartType = AlartType.error,
+        //                type = AlartShow.note,
+        //                MessageAr = "العنصر غير موجود.",
+        //                MessageEn = "Item not found."
+        //            }
+        //        };
+        //    }
 
-            // Check if user can access this item
-            if (!await IsAdminAsync(currentUserId))
-            {
-                return new ResponseResult
-                {
-                    Result = Result.Unauthorized,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.Unauthorized,
-                        type = AlartShow.popup,
-                        MessageAr = "غير مصرح لك بالوصول لهذا العنصر.",
-                        MessageEn = "You are not authorized to access this item."
-                    }
-                };
-            }
+        //    Check if user can access this item
+        //    if (!await IsAdminAsync(currentUserId))
+        //    {
+        //        return new ResponseResult
+        //        {
+        //            Result = Result.Unauthorized,
+        //            Alart = new Alart
+        //            {
+        //                AlartType = AlartType.Unauthorized,
+        //                type = AlartShow.popup,
+        //                MessageAr = "غير مصرح لك بالوصول لهذا العنصر.",
+        //                MessageEn = "You are not authorized to access this item."
+        //            }
+        //        };
+        //    }
 
-            return new ResponseResult
-            {
-                Data = item,
-                Result = Result.Success,
-                Alart = new Alart
-                {
-                    AlartType = AlartType.success,
-                    type = AlartShow.note,
-                    MessageAr = "تم العثور على العنصر.",
-                    MessageEn = "Item found."
-                }
-            };
-        }
+        //    return new ResponseResult
+        //    {
+        //        Data = item,
+        //        Result = Result.Success,
+        //        Alart = new Alart
+        //        {
+        //            AlartType = AlartType.success,
+        //            type = AlartShow.note,
+        //            MessageAr = "تم العثور على العنصر.",
+        //            MessageEn = "Item found."
+        //        }
+        //    };
+        //}
         public async Task<ResponseResult> UpdateAsync(UpdateItemDto dto)
         {
             var item = await _Itemrepo.GetByIdAsync(dto.Id);
@@ -347,20 +381,6 @@ namespace ReservationSystem.Application.Service
                         type = AlartShow.note,
                         MessageAr = "العنصر غير موجود.",
                         MessageEn = "Item not found."
-                    }
-                };
-            }
-            if (!await IsAdminAsync(dto.AdminId))
-            {
-                return new ResponseResult
-                {
-                    Result = Result.Failed,
-                    Alart = new Alart
-                    {
-                        AlartType = AlartType.warning,
-                        type = AlartShow.popup,
-                        MessageAr = "هناك خطأ في تحديد المشرف",
-                        MessageEn = "There is an error in specifying the supervisor."
                     }
                 };
             }
@@ -379,7 +399,52 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
-
+            //check if notfound this itemType in DB
+            var ExistItemType = await _ItemTyperepo.FindOneAsync(a => a.Id == dto.ItemTypeId);
+            if (ExistItemType != null)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.popup,
+                        MessageAr = "هناك خطأ في بيانات نوع العنصر",
+                        MessageEn = "There is an error in the item type data."
+                    }
+                };
+            }
+  
+            if (!await IsAdminAsync(dto.AdminId))
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.popup,
+                        MessageAr = "هناك خطأ في تحديد المشرف",
+                        MessageEn = "There is an error in specifying the supervisor."
+                    }
+                };
+            }
+            var Existitem = await _Itemrepo.FindOneAsync(a => a.AdminId == dto.AdminId);
+            if (Existitem != null)
+            {
+                return new ResponseResult
+                {
+                    Result = Result.Failed,
+                    Alart = new Alart
+                    {
+                        AlartType = AlartType.warning,
+                        type = AlartShow.popup,
+                        MessageAr = "لقد تم تحديد هذا المشرف من قبل",
+                        MessageEn = "This Admin has been identified by"
+                    }
+                };
+            }
             item.Name = dto.Name;
             item.Description = dto.Description;
             item.PricePerHour = dto.PricePerHour;
