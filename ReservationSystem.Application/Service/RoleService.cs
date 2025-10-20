@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ReservationSystem.Application.IService;
 using ReservationSystem.Domain.Entities;
 
 namespace ReservationSystem.Application.Service
@@ -378,31 +379,31 @@ namespace ReservationSystem.Application.Service
 
             return ResponseHelper.Success("تم استرجاع ملف المستخدم بنجاح", "User profile retrieved successfully", userProfile);
         }
-        public async Task<ResponseResult> UpdateUserRoleAsync(int userId, int newRoleId)
-        {
-            // 1️⃣ Check user exists
-            var user = await _userRepo.FindOneAsync(a => a.Id == userId);
-            if (user == null)
-                return ResponseHelper.Failed("المستخدم غير موجود", "User not found");
+        //public async Task<ResponseResult> UpdateUserRoleAsync(int userId, int newRoleId)
+        //{
+        //    // 1️⃣ Check user exists
+        //    var user = await _userRepo.FindOneAsync(a => a.Id == userId);
+        //    if (user == null)
+        //        return ResponseHelper.Failed("المستخدم غير موجود", "User not found");
 
-            // 2️⃣ (Optional) Validate newRoleId exists in Roles table
-            var role = await _roleRepo.FindOneAsync(r => r.Id == newRoleId);
-            if (role == null)
-                return ResponseHelper.Failed("الدور غير موجود", "Role not found");
+        //    // 2️⃣ (Optional) Validate newRoleId exists in Roles table
+        //    var role = await _roleRepo.FindOneAsync(r => r.Id == newRoleId);
+        //    if (role == null)
+        //        return ResponseHelper.Failed("الدور غير موجود", "Role not found");
 
-            // 3️⃣ Update role
-            user.RoleId = newRoleId;
-            _userRepo.Update(user);
-            await _uow.SaveAsync();
+        //    // 3️⃣ Update role
+        //    user.RoleId = newRoleId;
+        //    _userRepo.Update(user);
+        //    await _uow.SaveAsync();
 
-            return ResponseHelper.Success("تم تحديث دور المستخدم بنجاح", "User role updated successfully", new
-            {
-                UserId = user.Id,
-                UserName = user.Name,
-                NewRoleId = user.RoleId,
-                NewRoleName = role.Name
-            });
-        }
+        //    return ResponseHelper.Success("تم تحديث دور المستخدم بنجاح", "User role updated successfully", new
+        //    {
+        //        UserId = user.Id,
+        //        UserName = user.Name,
+        //        NewRoleId = user.RoleId,
+        //        NewRoleName = role.Name
+        //    });
+        //}
 
         public async Task<ResponseResult> GetAllUsersAsync()
         {
@@ -440,6 +441,86 @@ namespace ReservationSystem.Application.Service
             };
         }
 
-     
+        public async Task<ResponseResult> UpdateUserAsync(UpdateUserDto dto)
+        {
+            var user = await _userRepo.GetByIdAsync(
+                dto.UserId,
+                include: q => q
+                    .Include(u => u.Role)
+                        .ThenInclude(r => r.RolePermissions)
+                            .ThenInclude(rp => rp.Permission)
+            );
+
+            if (user == null)
+                return ResponseHelper.Warning("المستخدم غير موجود.", "User not found.");
+
+            user.Name = dto.UserName ?? user.Name;
+            user.Email = dto.Email ?? user.Email;
+
+            if (dto.RoleId.HasValue)
+                user.RoleId = dto.RoleId.Value;
+
+            if (dto.Permissions != null && dto.Permissions.Any())
+            {
+                var role = user.Role;
+
+                //foreach (var permDto in dto.Permissions)
+                //{
+                //    var rolePerm = role.RolePermissions
+                //        .FirstOrDefault(rp => rp.Permission.Resource == permDto.Resource);
+
+                //    if (rolePerm != null)
+                //    {
+                //        rolePerm.Permission.isShow = permDto.IsShow;
+                //        rolePerm.Permission.isEdit = permDto.IsEdit;
+                //        rolePerm.Permission.isAdd = permDto.IsAdd;
+                //        rolePerm.Permission.isDelete = permDto.IsDelete;
+                //    }
+                //}
+            }
+
+             _userRepo.Update(user);
+            var save = await _uow.SaveAsync();
+
+            if (save)
+                return ResponseHelper.Success("تم تحديث بيانات المستخدم وصلاحيات الدور بنجاح.", "User and role permissions updated successfully.");
+
+            return ResponseHelper.Failed("فشل في تحديث المستخدم أو الصلاحيات.", "Failed to update user or permissions.");
+        }
+
+        public async Task<ResponseResult> DeleteUserAsync(int userId)
+        {
+            //  Check if user exists
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return ResponseHelper.Warning("المستخدم غير موجود.", "User not found.");
+            }
+
+            
+            if (user.Role?.Name == "SuperAdmin")
+            {
+                return ResponseHelper.Warning("لا يمكن حذف المشرف العام.", "Cannot delete the Super Admin account.");
+            }
+
+
+            // 3️ Optional: delete related entities (e.g., reservations, logs)
+            // await _reservationRepo.DeleteRangeAsync(r => r.UserId == userId);
+
+            // 4️ Delete the user
+            _userRepo.Delete(user);
+            var save = await _uow.SaveAsync();
+
+            // 5️ Return result
+            if (save)
+            {
+                return ResponseHelper.Success("تم حذف المستخدم بنجاح.", "User deleted successfully.");
+            }
+
+            return ResponseHelper.Failed("فشل في حذف المستخدم.", "Failed to delete user.");
+        }
+
+
+
     }
 }

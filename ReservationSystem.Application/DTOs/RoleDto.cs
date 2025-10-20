@@ -25,13 +25,5 @@ namespace ReservationSystem.Application.DTOs
         public int UserCount { get; set; }
     }
 
-    public class PermissionDto
-    {
-        public int Id { get; set; }
-        public ResourceType Resource { get; set; }
-        public bool IsShow { get; set; }
-        public bool IsAdd { get; set; }
-        public bool IsEdit { get; set; }
-        public bool IsDelete { get; set; }
-    }
+
 }
