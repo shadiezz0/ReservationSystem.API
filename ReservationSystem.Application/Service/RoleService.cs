@@ -1,20 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ReservationSystem.Domain.Entities;
 
 namespace ReservationSystem.Application.Service
 {
     public class RoleService : IRoleService
     {
         private readonly IUnitOfWork _uow;
+        private readonly IAuthService _IAuthService;
         private readonly IGenericRepository<Role> _roleRepo;
         private readonly IGenericRepository<User> _userRepo;
         private readonly IGenericRepository<RolePermission> _rolePermissionRepo;
 
-        public RoleService(IUnitOfWork uow)
+        public RoleService(IUnitOfWork uow, IAuthService iAuthService)
         {
             _uow = uow;
             _roleRepo = uow.Repository<Role>();
             _rolePermissionRepo = uow.Repository<RolePermission>();
             _userRepo = uow.Repository<User>();
+            _IAuthService = iAuthService;
         }
 
         public async Task<ResponseResult> GetAllRolesAsync()
@@ -401,18 +404,42 @@ namespace ReservationSystem.Application.Service
             });
         }
 
-        //public async Task<ResponseResult> UpdateUserRoleAsync(int userId, int newRoleId)
-        //{
-        //    var user = await _userRepo.FindOneAsync(a=>a.Id==userId);
-        //    if (user == null)
-        //        return ResponseHelper.Failed("","");
+        public async Task<ResponseResult> GetAllUsersAsync()
+        {
+            var users = await _userRepo.GetAllAsync(include: query => query
+                    .Include(u => u.Role).ThenInclude(r => r.RolePermissions).ThenInclude(p=>p.Permission), asNoTracking: true);
+            var userDtos = users.Select(u => new UserWithPermissionsDto
+            {
+                UserId = u.Id,
+                UserName = u.Name,
+                RoleName = u.Role?.Name,
+                Permissions = u.Role?.RolePermissions
+                .Select(rp => new ListPermissionDto
+                {
+                    Resource = rp.Permission.Resource.ToString(),
+                    IsShow = rp.Permission.isShow,
+                    IsEdit = rp.Permission.isEdit,
+                    IsAdd = rp.Permission.isAdd,
+                    IsDelete = rp.Permission.isDelete
+                })
+        .Distinct()
+        .ToList()
+            }).ToList();
 
+            return new ResponseResult
+            {
+                Data = userDtos,
+                Result = Result.Success,
+                Alart = new Alart
+                {
+                    AlartType = AlartType.success,
+                    type = AlartShow.note,
+                    MessageEn = "Users retrieved successfully",
+                    MessageAr = "تم استرجاع الأعضاء بنجاح"
+                }
+            };
+        }
 
-        //    user.RoleId = newRoleId;
-        //     _userRepo.Update(user);
-        //    await _uow.SaveAsync();
-        //    return ResponseHelper.Success("تم تحديث البيانات بنجاح", "Data updated successfully", user);
-
-        //}
+     
     }
 }

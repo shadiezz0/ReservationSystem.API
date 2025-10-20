@@ -32,4 +32,21 @@ namespace ReservationSystem.Application.DTOs
         public RoleType RoleType { get; set; }
         public int ReservationCount { get; set; }
     }
+
+    public class UserWithPermissionsDto
+    {
+        public int UserId { get; set; }
+        public string UserName { get; set; }
+        public string RoleName { get; set; }
+        public List<ListPermissionDto> Permissions { get; set; }
+    }
+
+    public class ListPermissionDto
+    {
+        public string Resource { get; set; }   // use string for name
+        public bool IsShow { get; set; }
+        public bool IsEdit { get; set; }
+        public bool IsAdd { get; set; }
+        public bool IsDelete { get; set; }
+    }
 }

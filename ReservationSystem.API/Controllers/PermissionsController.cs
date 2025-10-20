@@ -11,13 +11,15 @@ namespace ReservationSystem.API.Controllers
 
         private readonly IPermissionCheckerService _permissionService;
         private readonly IRoleService _roleService;
+        private readonly IAuthService _authService;
 
-        public PermissionsController(IPermissionCheckerService permissionService, IRoleService roleService)
+        public PermissionsController(IPermissionCheckerService permissionService, IRoleService roleService, IAuthService authService)
         {
             _permissionService = permissionService;
             _roleService = roleService;
+            _authService = authService;
         }
-        [HttpPost("create")]
+        [HttpPost("CreatePermission")]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> CreatePermission([FromBody] CreatePermissionDto dto)
         {
@@ -48,6 +50,32 @@ namespace ReservationSystem.API.Controllers
                 return NotFound(new { MessageAr = success.Alart.MessageAr, MessageEn = success.Alart.MessageEn });
 
             return Ok(new { MessageAr = success.Alart.MessageAr , MessageEn = success.Alart.MessageEn , data = success.Data});
+        }
+        [HttpPost("CreateUser")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> CreateUser([FromBody] RegisterDto dto)
+        {
+            var permissionResult = await _permissionService.HasPermissionAsync(ResourceType.Users, PermissionAction.Edit);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+            var success = await _authService.RegisterAsync(dto);
+            if (success.Result != Result.Success)
+                return NotFound(new { MessageAr = success.Alart.MessageAr, MessageEn = success.Alart.MessageEn });
+
+            return Ok(new { MessageAr = success.Alart.MessageAr, MessageEn = success.Alart.MessageEn, data = success.Data });
+        }
+        [HttpGet("GetAllUsers")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var permissionResult = await _permissionService.HasPermissionAsync(ResourceType.Users, PermissionAction.Edit);
+            if (permissionResult != null)
+                return Ok(permissionResult);
+            var success = await _roleService.GetAllUsersAsync();
+            if (success.Result != Result.Success)
+                return NotFound(new { MessageAr = success.Alart.MessageAr, MessageEn = success.Alart.MessageEn });
+
+            return Ok(new { MessageAr = success.Alart.MessageAr, MessageEn = success.Alart.MessageEn, data = success.Data });
         }
     }
 }
