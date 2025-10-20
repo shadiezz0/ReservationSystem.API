@@ -12,8 +12,8 @@ using ReservationSystem.Infrastructure.Context;
 namespace ReservationSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251019150332_listItemTypeInItemTable")]
-    partial class listItemTypeInItemTable
+    [Migration("20251020075958_ListItemTypesInItemTable")]
+    partial class ListItemTypesInItemTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

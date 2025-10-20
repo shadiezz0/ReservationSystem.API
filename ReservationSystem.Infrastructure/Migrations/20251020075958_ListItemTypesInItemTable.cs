@@ -5,7 +5,7 @@
 namespace ReservationSystem.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class listItemTypeInItemTable : Migration
+    public partial class ListItemTypesInItemTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
