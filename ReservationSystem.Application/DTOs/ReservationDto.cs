@@ -49,7 +49,7 @@ namespace ReservationSystem.Application.DTOs
         public bool IsAvailable { get; set; }
 
         public int ItemId { get; set; }
-        [JsonIgnore]
+    
         public int ItemTypeId { get; set; }
 
     }
