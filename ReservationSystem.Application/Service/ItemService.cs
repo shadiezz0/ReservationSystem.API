@@ -191,7 +191,7 @@ namespace ReservationSystem.Application.Service
             // 🔐 Restrict to user's own items if not SuperAdmin
             if (!_currentUserService.IsCurrentUserSuperAdmin() && currentUserId != null)
             {
-                query = query.Where(i => i.CreatedById == currentUserId);
+                query = query.Where(i => i.CreatedById == currentUserId || i.AdminId == currentUserId);
             }
 
             // Include ItemTypes for clarity (optional)
@@ -234,16 +234,26 @@ namespace ReservationSystem.Application.Service
             var currentUserId = _currentUserService.GetCurrentUserId();
             
             // SuperAdmin sees all items, others see only their own items
-            var items = _currentUserService.IsCurrentUserSuperAdmin()
-                ? await _Itemrepo.GetAllAsync(
-                    include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
-                    asNoTracking: true
-                )
-                : await _Itemrepo.GetAllAsync(
-                    predicate: i => i.AdminId == currentUserId,
-                    include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
-                    asNoTracking: true
-                );
+            //var items = _currentUserService.IsCurrentUserSuperAdmin()
+            //    ? await _Itemrepo.GetAllAsync(
+            //        include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
+            //        asNoTracking: true
+            //    )
+            //    : await _Itemrepo.GetAllAsync(
+            //        predicate: i => i.AdminId == currentUserId,
+            //        include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
+            //        asNoTracking: true
+            //    );
+            var items = await _currentUserService.IsAdmin(currentUserId)
+               ?  await _Itemrepo.GetAllAsync(
+                   predicate: i => i.AdminId == currentUserId,
+                   include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
+                   asNoTracking: true
+               ): await _Itemrepo.GetAllAsync(
+                   include: query => query.Include(i => i.ItemTypes).Include(i => i.CreatedBy),
+                   asNoTracking: true
+               )
+               ;
 
             var itemDtos = items.Select(i => new ItemDto
             {
