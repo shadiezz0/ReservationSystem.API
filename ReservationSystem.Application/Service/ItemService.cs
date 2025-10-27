@@ -188,16 +188,25 @@ namespace ReservationSystem.Application.Service
             
 
           
-            // 🔐 Restrict to user's own items if not SuperAdmin
-            if (!_currentUserService.IsCurrentUserSuperAdmin() && currentUserId != null)
-            {
-                query = query.Where(i => i.CreatedById == currentUserId || i.AdminId == currentUserId);
-            }
+            //// 🔐 Restrict to user's own items if not SuperAdmin
+            //if (!_currentUserService.IsCurrentUserSuperAdmin() && currentUserId != null)
+            //{
+            //    query = query.Where(i => i.CreatedById == currentUserId || i.AdminId == currentUserId);
+            //}
 
             // Include ItemTypes for clarity (optional)
             query = query.Include(i => i.ItemTypes);
 
-            var items = await query.ToListAsync();
+            var items = await query.Select(a=> new ItemDto()
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Description = a.Description,
+                PricePerHour = a.PricePerHour,
+                AdminId = a.AdminId,
+                ItemTypeNames = a.ItemTypes.Where(a=>a.Id == itemTypeId).FirstOrDefault().Name,
+
+            }).ToListAsync();
 
             if (items == null || !items.Any())
             {
@@ -213,6 +222,7 @@ namespace ReservationSystem.Application.Service
                     }
                 };
             }
+          
             return new ResponseResult
             {
                 DataCount = items.Count(),

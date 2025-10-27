@@ -26,5 +26,16 @@
         public int CreatedById { get; set; }
         public int AdminId { get; set; }
     }
+    public class ItemResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public double PricePerHour { get; set; }
+        public string ItemTypeNames { get; set; }
+        public string CreatedByName { get; set; }
+        public int CreatedById { get; set; }
+        public int AdminId { get; set; }
+    }
 
 }
