@@ -1,16 +1,20 @@
-﻿namespace ReservationSystem.Application.Service
+﻿using ReservationSystem.Application.IService;
+
+namespace ReservationSystem.Application.Service
 {
     public class ReservationService : IReservationService
     {
+        private readonly INotificationService _notification;
         private readonly IGenericRepository<Reservation> _reservation;
         private readonly IGenericRepository<Item> _itemRepo;
         private readonly IUnitOfWork _uow;
-        
-        public ReservationService(IUnitOfWork uow)
+
+        public ReservationService(IUnitOfWork uow, INotificationService notification)
         {
             _reservation = uow.Repository<Reservation>();
             _itemRepo = uow.Repository<Item>();
             _uow = uow;
+            _notification = notification;
         }
 
         // Create Reservation
@@ -53,11 +57,24 @@
             };
             await _reservation.AddAsync(reservation);
             var save = await _uow.SaveAsync();
-            if (save)
+            if (!save)
             {
-                 return ResponseHelper.Success("تم إنشاء الحجز بنجاح.", "Reservation created successfully.");
+              
+                return ResponseHelper.Failed("لم يتم إنشاء الحجز بنجاح.", "Reservation Not created successfully.");
             }
-            return ResponseHelper.Failed("لم يتم إنشاء الحجز بنجاح.", "Reservation Not created successfully.");
+            var ( msgAr, msgEn) =
+        ReservationNotificationHelper.GetMessage(Status.Pending);
+
+            await _notification.NotifyUserAsync(
+                userId.ToString(),               
+                msgEn
+            );
+
+            return ResponseHelper.Success(
+                "تم إنشاء الحجز بنجاح.",
+                "Reservation created successfully."
+            );
+           
         }
 
 
@@ -190,6 +207,15 @@
             _reservation.Update(res);
             await _uow.SaveAsync();
 
+            // 🔔 Notification
+            var ( msgAr,  msgEn) =
+                ReservationNotificationHelper.GetMessage(Status.Confirmed);
+
+            await _notification.NotifyUserAsync(
+                res.UserId.ToString(),
+                msgEn
+            );
+
             return ResponseHelper.Success("تم تأكيد الحجز بنجاح.", "Reservation confirmed successfully.",res);
         }
 
@@ -214,6 +240,15 @@
 
             _reservation.Update(res);
             await _uow.SaveAsync();
+
+            // 🔔 Notification
+            var ( msgAr,msgEn) =
+                ReservationNotificationHelper.GetMessage(Status.Cancelled);
+
+            await _notification.NotifyUserAsync(
+                res.UserId.ToString(),
+                msgEn
+            );
 
             return ResponseHelper.Success("تم إلغاء الحجز بنجاح.", "Reservation cancelled successfully.", res);
         }
