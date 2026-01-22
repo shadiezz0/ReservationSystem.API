@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ReservationSystem.API.Middlewares;
 using ReservationSystem.Application;
 using ReservationSystem.Application.Comman.Helpers;
 using ReservationSystem.Domain.Entities;
@@ -121,7 +122,7 @@ using (var scope = app.Services.CreateScope())
 app.UseSwagger();
     app.UseSwaggerUI();
 //}
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

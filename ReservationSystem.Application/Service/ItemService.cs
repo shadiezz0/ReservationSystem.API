@@ -108,9 +108,12 @@ namespace ReservationSystem.Application.Service
                 CreatedById = currentUserId.Value,
                 AdminId = dto.AdminId
             };
-
             await _Itemrepo.AddAsync(item);
+
             var saveResult = await _uow.SaveAsync();
+
+            if (!saveResult)
+                throw new ApplicationException("Failed to save item");
 
             return new ResponseResult
             {
@@ -182,9 +185,9 @@ namespace ReservationSystem.Application.Service
             var currentUserId = _currentUserService.GetCurrentUserId();
 
             // Apply user filtering for non-SuperAdmin users
-            // ✅ Query items that have this ItemTypeId in their collection
+            //  Query items that have this ItemTypeId in their collection
             IQueryable<Item> query = _Itemrepo.AsNoTracking()
-       .Where(i => i.ItemTypes.Any(t => t.Id == itemTypeId));
+                .Where(i => i.ItemTypes.Any(t => t.Id == itemTypeId));
             
 
           
