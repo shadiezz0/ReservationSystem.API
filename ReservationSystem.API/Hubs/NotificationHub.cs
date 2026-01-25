@@ -7,14 +7,28 @@ namespace ReservationSystem.API.Hubs
         //// Client to Server example
         //public async Task SendMessageToAll(string message)
         //{
-        //    await Clients.All.SendAsync("ReceiveNotification", new
+        //    await Clients.All.SendAsync("ReseiveNotification", new
         //    {
         //        Message = message,
         //        CreatedAt = DateTime.UtcNow
         //    });
         //}
+        // 🔹 لما المستخدم يعمل Connection
+        //public override async Task OnConnectedAsync()
+        //{
+        //    var userId = Context.UserIdentifier; // جاية من JWT
 
-        // Client to Server to specific user
+        //    if (!string.IsNullOrEmpty(userId))
+        //    {
+        //        // اختياري – مش ضروري لو هتستخدم Clients.User
+        //        await Groups.AddToGroupAsync(Context.ConnectionId, $"USER_{userId}");
+        //    }
+
+        //    await base.OnConnectedAsync();
+        //}
+
+        // 🔹 (اختياري) Client → Server → Client
+        // تستخدمها لو عايز تبعت إشعار من الفرونت نفسه
         public async Task SendMessageToUser(string userId, string message)
         {
             await Clients.User(userId).SendAsync("ReserveNotification", new

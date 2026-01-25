@@ -32,7 +32,8 @@ namespace ReservationSystem.API.Middlewares
                 await context.Response.WriteAsync(
                     JsonSerializer.Serialize(new
                     {
-                        message = "Internal Server Error",
+                        Message = "حدث خطأ غير متوقع",
+                        MessageEn = "Unexpected error occurred",
                         traceId = context.TraceIdentifier
                     })
                 );
